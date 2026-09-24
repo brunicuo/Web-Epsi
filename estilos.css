@@ -105,7 +105,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .video-card img { width: 100%; height: var(--alto-video); object-fit: cover; object-position: center 24%; }
 .video-vel { position: absolute; inset: 0 0 auto; height: var(--alto-video); background: rgba(28,27,25,.28); }
 .play { position: absolute; left: 50%; top: 180px; transform: translate(-50%,-50%); width: 92px; height: 92px; border-radius: 999px; border: 0; background: var(--amarillo); color: var(--tinta); display: flex; align-items: center; justify-content: center; cursor: pointer; box-shadow: 0 0 0 12px rgba(255,202,8,.28); }
-.video-card .play { top: calc(var(--alto-video) * 0.74); }
+.video-card .play { left: 24px; top: calc(var(--alto-video) - 58px); transform: translateY(-50%); width: 74px; height: 74px; box-shadow: 0 0 0 10px rgba(255,202,8,.24); }
 /* el reproductor tapa la portada recien cuando se toca el play */
 .video-marco { position: absolute; left: 0; top: 0; width: 100%; height: var(--alto-video); border: 0; z-index: 3; background: #000; }
 .video-mini .video-marco { height: 100%; }
