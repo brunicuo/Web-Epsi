@@ -79,6 +79,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .nav img { height: 40px; width: auto; }
 .nav-links { display: flex; align-items: center; gap: 28px; font-size: 15px; font-weight: 600; }
 .nav-links a { color: var(--tinta); position: relative; }
+.nav-links a.btn-wa { color: var(--blanco); }
 .nav-links a.navlink::after { content: ""; position: absolute; left: 0; right: 100%; bottom: -6px; height: 2px; background: var(--bordo); transition: right .3s var(--ease); }
 .nav-links a.navlink:hover::after { right: 0; }
 .nav-burger { display: none; width: 44px; height: 44px; border: 0; background: transparent; color: var(--tinta); align-items: center; justify-content: center; }
@@ -224,6 +225,7 @@ svg.in .path-draw { animation: draw 2.4s var(--ease) .2s forwards; }
 
 /* footer */
 .footer { background: var(--tinta); color: var(--blanco); padding: 64px 0 40px; }
+.footer img { align-self: flex-start; width: auto; max-width: 100%; height: auto; }
 .footer-grid { display: grid; grid-template-columns: 1.4fr repeat(3, .7fr); gap: 40px; }
 .footer h4 { margin: 0 0 4px; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--amarillo); }
 .footer a { color: #E8E4DA; font-size: 15px; }
