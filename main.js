@@ -105,6 +105,45 @@
     if (!chips.length || !panel) return;
     var datos = JSON.parse(document.getElementById('datos-servicios').textContent);
     var idx = 0, pausado = false;
+    var listaChips = chips[0].parentNode;
+    var acordeon = window.matchMedia('(max-width: 720px)');
+
+    /* En celular el panel viaja: se inserta justo debajo del chip elegido,
+       asi la respuesta aparece donde el dedo toco y no 400px mas abajo. */
+    function ubicarPanel() {
+      var destino, refChip;
+      if (acordeon.matches) {
+        refChip = chips[idx];
+        destino = refChip.nextSibling;
+        if (panel.previousElementSibling === refChip) return;
+      } else {
+        refChip = null;
+        destino = listaChips.nextSibling;
+        if (panel.previousElementSibling === listaChips) return;
+      }
+      var ancla = refChip || listaChips;
+      var antes = ancla.getBoundingClientRect().top;
+      (refChip ? listaChips : listaChips.parentNode).insertBefore(panel, destino);
+      var corrimiento = ancla.getBoundingClientRect().top - antes;
+      if (corrimiento) {
+        try { window.scrollBy({ top: corrimiento, left: 0, behavior: 'instant' }); }
+        catch (e) { window.scrollBy(0, corrimiento); }
+      }
+    }
+
+    /* Si el panel recien abierto se corta abajo, acercamos lo justo para que
+       entre entero, cuidando que el chip elegido siga a la vista. */
+    function acercarPanel() {
+      if (!acordeon.matches) return;
+      var sobra = panel.getBoundingClientRect().bottom - window.innerHeight + 16;
+      if (sobra <= 8) return;
+      var margen = chips[idx].getBoundingClientRect().top - 84;
+      var mover = Math.min(sobra, margen);
+      if (mover > 8) {
+        try { window.scrollBy({ top: mover, left: 0, behavior: 'smooth' }); }
+        catch (e) { window.scrollBy(0, mover); }
+      }
+    }
 
     function pintar() {
       var d = datos[idx];
@@ -114,13 +153,14 @@
       panel.querySelector('.panel-cta .txt').textContent = d.cta;
       document.querySelector('.panel-num').textContent = '0' + (idx + 1);
       chips.forEach(function (c, i) { c.setAttribute('aria-pressed', i === idx ? 'true' : 'false'); });
+      ubicarPanel();
       var main = panel.querySelector('.panel-main');
       main.style.animation = 'none';
       void main.offsetWidth;
       main.style.animation = '';
     }
     chips.forEach(function (c, i) {
-      c.addEventListener('click', function () { idx = i; pausado = true; pintar(); });
+      c.addEventListener('click', function () { idx = i; pausado = true; pintar(); acercarPanel(); });
     });
     var stage = panel;
     var x0 = null, y0 = null;
@@ -132,13 +172,21 @@
         idx = (idx + (dx < 0 ? 1 : -1) + datos.length) % datos.length;
         pausado = true;
         pintar();
+        acercarPanel();
       }
       x0 = null;
     }, { passive: true });
     pintar();
+    if (acordeon.addEventListener) {
+      acordeon.addEventListener('change', ubicarPanel);
+    } else if (acordeon.addListener) {
+      acordeon.addListener(ubicarPanel);
+    }
     if (!reduce) {
       setInterval(function () {
-        if (pausado) return;
+        /* La rotacion automatica queda solo en escritorio: en el acordeon
+           moveria el panel de lugar mientras la persona esta leyendo. */
+        if (pausado || acordeon.matches) return;
         idx = (idx + 1) % datos.length;
         pintar();
       }, 4500);

@@ -264,6 +264,13 @@ svg.in .path-draw { animation: draw 2.4s var(--ease) .2s forwards; }
   .capa-foto .video-bg, .capa-placa { display: none; }
   .capa-foto img { height: 240px; }
   .cta-final { flex-direction: column; align-items: flex-start; }
+  /* servicios en modo acordeon: el panel se inserta entre los chips */
+  .chips { flex-direction: column; align-items: stretch; gap: 8px; margin-bottom: 0; }
+  .chip { height: auto; min-height: 54px; padding: 15px 20px; text-align: left; line-height: 1.35; }
+  .chips .panel { margin: 6px 0 14px; }
+  .chips .panel-main { padding: 24px 22px 26px; }
+  .chips .panel-lat { display: none; }
+  .chips .panel-cta { width: 100%; align-self: stretch !important; height: 54px; font-size: 16px; }
   .cta-sec { justify-content: flex-start; }
   .wa-flotante { display: flex; }
   .faq-item .resp { padding-right: 0; }
