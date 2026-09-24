@@ -193,7 +193,31 @@
     }
   }
 
-  /* 5. Preguntas frecuentes */
+  /* 5. Videos de YouTube: la tapa se cambia por el reproductor recien al tocar
+     el play, asi la home no carga los scripts de YouTube de entrada. */
+  function videos() {
+    document.querySelectorAll('.play[data-youtube]').forEach(function (boton) {
+      boton.addEventListener('click', function () {
+        var id = (boton.getAttribute('data-youtube') || '').trim();
+        if (!id) return;
+        var caja = boton.parentElement;
+        if (caja.querySelector('.video-marco')) return;
+        var marco = document.createElement('iframe');
+        marco.className = 'video-marco';
+        marco.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) +
+          '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+        marco.title = boton.getAttribute('data-titulo') || 'Video';
+        marco.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+        marco.setAttribute('allowfullscreen', '');
+        marco.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+        caja.appendChild(marco);
+        caja.classList.add('reproduciendo');
+        marco.focus();
+      });
+    });
+  }
+
+  /* 6. Preguntas frecuentes */
   function preguntas() {
     document.querySelectorAll('.faq-item > button').forEach(function (b) {
       b.addEventListener('click', function () {
@@ -211,7 +235,7 @@
     });
   }
 
-  /* 6. Menú en celular */
+  /* 7. Menú en celular */
   function menu() {
     var burger = document.querySelector('.nav-burger');
     var links = document.querySelector('.nav-links');
@@ -237,6 +261,7 @@
     contadores();
     ciclo();
     servicios();
+    videos();
     preguntas();
     menu();
   });
