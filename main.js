@@ -135,7 +135,19 @@
     return marco;
   }
 
+  /* Portadas tomadas de YouTube: si el video no tiene la imagen en alta
+     resolucion, YouTube devuelve un gris de 120px; ahi se usa la estandar. */
+  function portadaYT(img) {
+    function revisar() {
+      if (img.naturalWidth && img.naturalWidth < 200 && img.src.indexOf('maxresdefault') > -1) {
+        img.src = img.src.replace('maxresdefault', 'hqdefault');
+      }
+    }
+    if (img.complete) revisar(); else img.addEventListener('load', revisar);
+  }
+
   function videos() {
+    document.querySelectorAll('img[data-portada-yt]').forEach(portadaYT);
     document.querySelectorAll('.play[data-youtube]').forEach(function (boton) {
       boton.addEventListener('click', function () {
         var id = (boton.getAttribute('data-youtube') || '').trim();
@@ -185,6 +197,7 @@
       var img = document.createElement('img');
       img.src = e.querySelector('img').getAttribute('src');
       img.alt = '';
+      if (img.src.indexOf('i.ytimg.com') > -1) portadaYT(img);
       var nombre = document.createElement('span');
       nombre.textContent = e.getAttribute('data-mini') || e.getAttribute('data-nombre');
       b.appendChild(img);
@@ -402,6 +415,24 @@
     }
     window.addEventListener('scroll', pedir, { passive: true });
     ventana.addEventListener('scroll', pedir, { passive: true });
+
+    /* sin anclaje (pantallas donde no entra), la fila avanza sola cada 6 s
+       mientras se ve; se frena con el mouse encima o 8 s despues de tocarla */
+    var tocado = 0, encima = false, aLaVista = false;
+    ventana.addEventListener('pointerdown', function () { tocado = Date.now(); }, { passive: true });
+    ventana.addEventListener('touchstart', function () { tocado = Date.now(); }, { passive: true });
+    ventana.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') encima = true; });
+    ventana.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') encima = false; });
+    if (!reduce && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (e) { aLaVista = e[0].isIntersecting; }, { threshold: 0.5 }).observe(ventana);
+      setInterval(function () {
+        if (activo || !aLaVista || encima || document.hidden || Date.now() - tocado < 8000) return;
+        var q = tren.children;
+        if (q.length < 2) return;
+        var sig = ventana.scrollLeft + (q[1].offsetLeft - q[0].offsetLeft);
+        ventana.scrollTo({ left: sig > ventana.scrollWidth - ventana.clientWidth + 4 ? 0 : sig, behavior: 'smooth' });
+      }, 6000);
+    }
     window.addEventListener('resize', function () { clearTimeout(preparar.t); preparar.t = setTimeout(function () { preparar(false); }, 150); });
     window.addEventListener('load', function () { preparar(true); });
     if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { preparar(true); });

@@ -234,12 +234,16 @@ ul { margin: 0; padding: 0; list-style: none; }
 .video-mini img { width: 140px; height: 140px; object-fit: cover; opacity: .55; }
 .video-mini .play { width: 60px; height: 60px; top: 50%; box-shadow: none; }
 .video-mini em { position: absolute; left: 12px; bottom: 12px; font-style: normal; font-size: 12px; font-weight: 700; color: var(--blanco); background: rgba(28,27,25,.75); padding: 4px 10px; border-radius: 999px; }
-.horiz .cabecera-col { margin-bottom: 36px; }
+.horiz .cabecera-col { margin-bottom: 28px; }
+.horiz .h2 { font-size: clamp(26px, 3vw, 42px); }
 .horiz-ventana { overflow-x: auto; scroll-snap-type: x mandatory; scrollbar-width: none; }
 .horiz-ventana::-webkit-scrollbar { display: none; }
 .horiz-ventana:focus-visible { outline: 2px solid var(--bordo); outline-offset: -2px; }
 .horiz-tren { --margen: 24px; display: flex; gap: 20px; width: max-content; padding: 8px max(var(--margen), calc((100vw - var(--ancho)) / 2 + var(--margen))) 12px; }
-.horiz-tren > .quote { width: clamp(300px, 35vw, 500px); flex-shrink: 0; scroll-snap-align: center; }
+.horiz-tren > .quote { width: min(760px, 62vw); flex-shrink: 0; scroll-snap-align: center; display: grid; grid-template-columns: 38% 1fr; grid-template-rows: 1fr auto; gap: 16px 26px; }
+/* tarjeta horizontal: video a la izquierda, testimonio a la derecha */
+.horiz-tren .video-mini { grid-row: 1 / 3; height: auto; min-height: 230px; }
+.horiz-tren .quote blockquote { align-self: center; font-size: 17px; }
 .horiz-barra { height: 4px; margin-top: 24px; border-radius: 999px; background: var(--borde); overflow: hidden; }
 .horiz-barra i { display: block; width: 0; height: 100%; background: var(--bordo); }
 /* modo anclado: lo activa el script solo si todo entra en la pantalla */
@@ -248,7 +252,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .horiz-activo .horiz-tren { will-change: transform; }
 .horiz-activo .quote:hover { transform: none; }
 .video-mini-foto img { width: 100%; height: 100%; object-fit: cover; opacity: .85; }
-.quote-vacio { display: block; background: #EFE9DA; border-radius: 999px !important; }
+.quote-iniciales { display: flex; align-items: center; justify-content: center; background: var(--bordo); color: var(--blanco); font-size: 17px; font-weight: 800; border-radius: 999px !important; }
 .caso { margin-top: 24px; padding: 36px 40px; border-radius: 24px; background: var(--tinta); color: var(--blanco); display: grid; grid-template-columns: 1.2fr repeat(3, .6fr); gap: 28px; align-items: center; }
 .caso-dato { display: flex; flex-direction: column; gap: 6px; padding-left: 22px; border-left: 1px solid #3A3833; }
 .caso-dato b { font-size: 40px; font-weight: 900; color: var(--amarillo); letter-spacing: -.03em; }
@@ -355,7 +359,11 @@ ul { margin: 0; padding: 0; list-style: none; }
   .tele-item { font-size: 22px; padding: 10px 0 10px 30px; }
   .tele-item::before { left: 2px; top: 10px; }
   .horiz-tren { --margen: 20px; }
-  .horiz-tren > .quote { width: 82vw; }
+  .horiz-tren > .quote { width: 84vw; display: flex; padding: 20px; gap: 14px; }
+  .horiz-tren .video-mini { height: 120px; min-height: 0; }
+  .horiz-tren .quote blockquote { font-size: 15px; line-height: 1.5; }
+  .horiz .h2 { font-size: 26px; }
+  .horiz .cabecera-col { gap: 8px; margin-bottom: 18px; }
   .wa-flotante { display: flex; }
   .faq-item .resp { padding-right: 0; }
   .dots { display: none; }
