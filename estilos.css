@@ -316,7 +316,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 
 
 /* wa flotante */
-.wa-flotante { position: fixed; right: 18px; bottom: 18px; z-index: 50; width: 58px; height: 58px; border-radius: 999px; background: var(--verde); color: var(--blanco); display: none; align-items: center; justify-content: center; box-shadow: 0 10px 28px rgba(28,27,25,.35); }
+/* icono oficial de WhatsApp; la sombra sigue la silueta del globo */
+.wa-flotante { position: fixed; right: 18px; bottom: 18px; z-index: 50; width: 60px; height: 60px; display: none; filter: drop-shadow(0 6px 14px rgba(28,27,25,.3)); }
+.wa-flotante img { width: 100%; height: 100%; display: block; }
 
 /* animaciones de entrada */
 .rv { opacity: 0; transform: translateY(22px); transition: opacity .7s var(--ease), transform .7s var(--ease); }
