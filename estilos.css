@@ -111,14 +111,30 @@ ul { margin: 0; padding: 0; list-style: none; }
 .escena { position: absolute; inset: 0; margin: 0; opacity: 0; transition: opacity .6s var(--ease); }
 .escena.activa { opacity: 1; }
 .escena img { width: 100%; height: 100%; object-fit: cover; object-position: center 24%; }
-.escenario-marco { position: absolute; inset: 0; z-index: 2; opacity: 0; pointer-events: none; transition: opacity .8s var(--ease); }
-.escenario-marco iframe { width: 100%; height: 100%; border: 0; display: block; }
-.escenario.en-vivo .escenario-marco, .escenario.con-sonido .escenario-marco { opacity: 1; }
-.escenario.con-sonido .escenario-marco { pointer-events: auto; }
+.escenario-marco { position: absolute; inset: 0; z-index: 2; opacity: 0; pointer-events: none; background: #000; transition: opacity .6s var(--ease); }
+.escenario-video { position: absolute; inset: 0; }
+.escenario-marco iframe { width: 100%; height: 100%; border: 0; display: block; pointer-events: none; }
+.escenario.en-vivo .escenario-marco, .escenario.con-sonido .escenario-marco, .escenario.flotando .escenario-marco { opacity: 1; }
+/* con los controles nativos de YouTube (respaldo) el video recibe los toques */
+.escenario.nativo .escenario-marco, .escenario.nativo .escenario-marco iframe { pointer-events: auto; }
+.marco-tapa { position: absolute; inset: 0; z-index: 1; display: none; padding: 0; border: 0; background: transparent; cursor: pointer; pointer-events: auto; }
+.escenario.propio .marco-tapa, .escenario.flotando:not(.con-sonido) .marco-tapa { display: block; }
+.marco-ctrl { position: absolute; left: 12px; bottom: 12px; z-index: 2; display: flex; gap: 8px; }
+.marco-btn { display: none; align-items: center; gap: 8px; height: 40px; padding: 0 14px 0 4px; border: 0; border-radius: 999px; background: rgba(28,27,25,.78); color: var(--blanco); font: inherit; font-size: 13px; font-weight: 700; cursor: pointer; pointer-events: auto; }
+.marco-btn .escenario-sonido-ico { width: 32px; height: 32px; }
+.escenario.flotando:not(.con-sonido) .marco-escuchar { display: inline-flex; }
+.escenario.propio .marco-pausa { display: inline-flex; width: 40px; padding: 0; justify-content: center; }
+.marco-pausa .ico-play, .marco-pausa.pausado .ico-pausa { display: none; }
+.marco-pausa.pausado .ico-play { display: block; }
+.marco-cerrar { position: absolute; top: 8px; right: 8px; z-index: 2; width: 34px; height: 34px; display: none; align-items: center; justify-content: center; border: 0; border-radius: 999px; background: rgba(28,27,25,.78); color: var(--blanco); cursor: pointer; pointer-events: auto; }
+.escenario.flotando .marco-cerrar { display: flex; }
+/* ventana flotante: el mismo reproductor se despega de la pagina (no se recarga) */
+.escenario.flotando .escenario-marco { position: fixed; inset: auto 24px 24px auto; width: min(380px, 36vw); aspect-ratio: 16 / 9; z-index: 60; border-radius: 16px; overflow: hidden; box-shadow: 0 20px 50px rgba(0,0,0,.4); pointer-events: auto; animation: flotarIn .35s var(--ease); }
+@keyframes flotarIn { from { opacity: 0; transform: translateY(16px) scale(.96); } }
 .escenario-sonido { position: absolute; left: 16px; bottom: 16px; z-index: 3; display: inline-flex; align-items: center; gap: 10px; padding: 6px 16px 6px 6px; border: 0; border-radius: 999px; background: rgba(28,27,25,.74); color: var(--blanco); font: inherit; font-size: 14px; font-weight: 700; cursor: pointer; transition: transform .25s var(--ease), background .25s var(--ease); }
 .escenario-sonido:hover { transform: translateY(-2px); background: rgba(28,27,25,.9); }
 .escenario-sonido-ico { width: 34px; height: 34px; border-radius: 999px; background: var(--amarillo); color: var(--tinta); display: flex; align-items: center; justify-content: center; }
-.escenario.con-sonido .escenario-sonido { display: none; }
+.escenario.con-sonido .escenario-sonido, .escenario.flotando .escenario-sonido { display: none; }
 .escenario-minis { display: flex; gap: 10px; padding: 0 22px 18px; }
 .escenario-minis:empty { display: none; }
 .mini { position: relative; flex: 1; min-width: 0; display: flex; align-items: center; gap: 10px; padding: 6px 10px 6px 6px; border: 1px solid #3A3833; border-radius: 12px; background: transparent; color: #D6D1C4; font: inherit; font-size: 13px; font-weight: 700; text-align: left; cursor: pointer; overflow: hidden; transition: border-color .25s var(--ease), color .25s var(--ease); }
@@ -326,6 +342,8 @@ ul { margin: 0; padding: 0; list-style: none; }
   .cta-final { flex-direction: column; align-items: flex-start; }
   .cta-sec { justify-content: flex-start; }
   .escenario-sonido { left: 12px; bottom: 12px; font-size: 13px; }
+  /* en celular flota abajo a la izquierda, para no tapar el boton de WhatsApp */
+  .escenario.flotando .escenario-marco { inset: auto auto 16px 12px; width: 62vw; border-radius: 12px; }
   .escenario-minis { padding: 0 16px 16px; gap: 8px; }
   .mini img { width: 44px; height: 26px; }
   .pila { --alto-carta: 250px; --desfase: 16px; gap: 28px; }

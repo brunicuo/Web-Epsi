@@ -151,9 +151,11 @@
     });
   }
 
-  /* Escenario del inicio: los videos arrancan solos, sin sonido y con
-     subtitulos, y rotan cada 15 s. Tocar la pantalla lo reproduce con sonido.
-     Nada de YouTube se carga hasta que la pagina termino y el escenario se ve. */
+  /* Escenario del inicio. Los videos arrancan solos, sin sonido y con
+     subtitulos, y rotan cada 15 s. Tocar activa el audio sobre el mismo
+     reproductor, sin recargarlo. Si se baja con un video andando, sigue en una
+     ventana flotante que se puede cerrar: en computadora siempre, en celular
+     solo si se activo el sonido. */
   function escenario() {
     var raiz = document.querySelector('.escenario');
     if (!raiz) return;
@@ -162,12 +164,17 @@
     });
     var escenas = Array.prototype.slice.call(raiz.querySelectorAll('.escena'));
     if (!escenas.length) return;
-    var marco = raiz.querySelector('.escenario-marco');
+    var pantalla = raiz.querySelector('.escenario-pantalla');
+    var lugar = raiz.querySelector('.escenario-video');
+    var pausa = raiz.querySelector('.marco-pausa');
     var titulo = raiz.querySelector('.escenario-titulo');
     var sub = raiz.querySelector('.escenario-sub');
+    var YT = 'https://www.youtube-nocookie.com';
     var TURNO = 15000;
     var ahorro = navigator.connection && navigator.connection.saveData;
-    var idx = 0, modo = 'portada', aVista = false, reloj = null, encender = null;
+    var escritorio = window.matchMedia('(min-width: 721px)');
+    var idx = 0, modo = 'portada', autoActivo = false, aVista = true, cerrado = false;
+    var yt = null, reloj = null, encender = null, escuchar = null, verificar = null;
     raiz.style.setProperty('--turno', TURNO / 1000 + 's');
 
     var minis = escenas.length < 2 ? [] : escenas.map(function (e, i) {
@@ -195,64 +202,159 @@
       titulo.textContent = escenas[idx].getAttribute('data-nombre');
       sub.textContent = escenas[idx].getAttribute('data-sub');
     }
-    function vaciar() {
-      clearTimeout(reloj);
-      clearTimeout(encender);
-      marco.innerHTML = '';
-      raiz.classList.remove('en-vivo', 'rotando');
+    function mandar(func, args) {
+      if (yt && yt.frame.contentWindow) {
+        yt.frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: func, args: args || [] }), YT);
+      }
     }
-    function previa() {
-      vaciar();
+    function vaciar() {
+      clearTimeout(reloj); clearTimeout(encender); clearTimeout(verificar); clearInterval(escuchar);
+      yt = null;
+      lugar.innerHTML = '';
+      raiz.classList.remove('en-vivo', 'rotando', 'con-sonido', 'propio', 'nativo');
+      pausa.classList.remove('pausado');
+    }
+    function crear(conAudio) {
       var id = encodeURIComponent(idActual());
       var f = document.createElement('iframe');
-      f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&mute=1&controls=0&playsinline=1' +
-        '&rel=0&cc_load_policy=1&cc_lang_pref=es&hl=es&disablekb=1&iv_load_policy=3&loop=1&playlist=' + id;
-      f.title = 'Vista previa sin sonido: ' + escenas[idx].getAttribute('data-titulo');
-      f.allow = 'autoplay; encrypted-media; picture-in-picture';
-      f.setAttribute('tabindex', '-1');
-      f.setAttribute('aria-hidden', 'true');
-      /* la portada tapa el arranque de YouTube (barra de titulo, negro) */
-      f.addEventListener('load', function () { encender = setTimeout(function () { raiz.classList.add('en-vivo'); }, 1500); });
-      marco.appendChild(f);
+      f.src = YT + '/embed/' + id + '?' +
+        (conAudio ? 'autoplay=1&controls=1' : 'autoplay=1&mute=1&controls=0&disablekb=1&loop=1&playlist=' + id) +
+        '&playsinline=1&rel=0&cc_load_policy=1&cc_lang_pref=es&hl=es&iv_load_policy=3' +
+        '&enablejsapi=1&origin=' + encodeURIComponent(location.origin);
+      f.title = (conAudio ? '' : 'Vista previa sin sonido: ') + escenas[idx].getAttribute('data-titulo');
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      if (conAudio) f.setAttribute('allowfullscreen', '');
+      else { f.setAttribute('tabindex', '-1'); f.setAttribute('aria-hidden', 'true'); }
+      var este = { frame: f, listo: false, estado: -1, muted: !conAudio };
+      yt = este;
+      f.addEventListener('load', function () {
+        /* se le pide al reproductor que avise su estado (protocolo de la API de YouTube) */
+        var n = 0;
+        escuchar = setInterval(function () {
+          if (yt !== este || este.listo || ++n > 20) { clearInterval(escuchar); return; }
+          f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), YT);
+        }, 250);
+        /* respaldo: si YouTube no avisa que arranco, se muestra igual */
+        encender = setTimeout(function () { raiz.classList.add('en-vivo'); }, 4000);
+      });
+      lugar.appendChild(f);
+    }
+
+    window.addEventListener('message', function (e) {
+      if (!yt || e.source !== yt.frame.contentWindow) return;
+      var d;
+      try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (x) { return; }
+      if (!d || !d.event) return;
+      var estado = null;
+      if (d.event === 'onReady' || d.event === 'initialDelivery') yt.listo = true;
+      if (d.event === 'onStateChange' && typeof d.info === 'number') estado = d.info;
+      if (d.event === 'infoDelivery' && d.info) {
+        yt.listo = true;
+        if (typeof d.info.playerState === 'number') estado = d.info.playerState;
+        if (typeof d.info.muted === 'boolean') yt.muted = d.info.muted;
+      }
+      if (estado === null) return;
+      yt.estado = estado;
+      pausa.classList.toggle('pausado', estado === 2);
+      /* la portada se va cuando el video corre de verdad; el margen tapa la barra de titulo del arranque */
+      if (estado === 1 && !raiz.classList.contains('en-vivo')) {
+        clearTimeout(encender);
+        encender = setTimeout(function () { raiz.classList.add('en-vivo'); }, 600);
+      }
+    });
+
+    function previa() {
+      vaciar();
+      modo = 'previa';
+      crear(false);
       void raiz.offsetWidth;
       raiz.classList.add('rotando');
       if (escenas.length > 1) {
         reloj = setTimeout(function () { idx = (idx + 1) % escenas.length; pintar(); previa(); }, TURNO);
       }
     }
-    function conSonido() {
+    /* respaldo: reproductor nuevo con sonido y los controles de YouTube */
+    function nativo() {
       vaciar();
       modo = 'sonido';
-      raiz.classList.add('con-sonido');
-      marco.appendChild(reproductor(idActual(), escenas[idx].getAttribute('data-titulo')));
+      raiz.classList.add('con-sonido', 'nativo', 'en-vivo');
+      crear(true);
+    }
+    function conSonido() {
+      cerrado = false;
+      if (!yt || !yt.listo || yt.frame.src.indexOf('mute=1') < 0) { nativo(); return; }
+      clearTimeout(reloj);
+      raiz.classList.remove('rotando');
+      modo = 'sonido';
+      raiz.classList.add('con-sonido', 'propio', 'en-vivo');
+      mandar('unMute');
+      mandar('setVolume', [100]);
+      mandar('seekTo', [0, true]);
+      mandar('playVideo');
+      /* si el navegador no dejo activar el audio, se pasa al reproductor completo */
+      verificar = setTimeout(function () { if (modo === 'sonido' && yt && yt.muted) nativo(); }, 1200);
+    }
+    function alternarPausa() {
+      if (!yt) return;
+      var pausado = yt.estado === 2;
+      mandar(pausado ? 'playVideo' : 'pauseVideo');
+      yt.estado = pausado ? 1 : 2;
+      pausa.classList.toggle('pausado', !pausado);
+      pausa.setAttribute('aria-label', pausado ? 'Pausar' : 'Reproducir');
+    }
+    function cerrar() {
+      cerrado = true;
+      raiz.classList.remove('flotando');
+      vaciar();
+      modo = 'portada';
     }
     function elegir(i) {
       idx = i;
       pintar();
-      if (modo === 'sonido') conSonido();
-      else if (modo === 'previa' && aVista && !document.hidden) previa();
+      if (modo === 'sonido') nativo();
+      else if (autoActivo) previa();
+      else vaciar();
+    }
+    function alVer(visible) {
+      aVista = visible;
+      if (visible) {
+        raiz.classList.remove('flotando');
+        if (autoActivo && modo !== 'sonido' && !yt && !document.hidden) previa();
+        return;
+      }
+      if (!yt) return;
+      if (!cerrado && (modo === 'sonido' || escritorio.matches)) raiz.classList.add('flotando');
+      else if (modo !== 'sonido') { vaciar(); modo = 'portada'; }
     }
 
-    raiz.querySelector('.escenario-pantalla').addEventListener('click', function () {
-      if (modo !== 'sonido') conSonido();
+    pantalla.addEventListener('click', function () { if (modo !== 'sonido') conSonido(); });
+    raiz.querySelector('.marco-tapa').addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (modo === 'sonido') alternarPausa(); else conSonido();
     });
+    raiz.querySelector('.marco-escuchar').addEventListener('click', function (e) { e.stopPropagation(); conSonido(); });
+    pausa.addEventListener('click', function (e) { e.stopPropagation(); alternarPausa(); });
+    raiz.querySelector('.marco-cerrar').addEventListener('click', function (e) { e.stopPropagation(); cerrar(); });
     pintar();
-    if (reduce || ahorro || !('IntersectionObserver' in window)) return;
 
+    if (!('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function (e) {
+      alVer(e[0].isIntersecting && e[0].intersectionRatio >= 0.2);
+    }, { threshold: [0, 0.2] }).observe(pantalla);
+    document.addEventListener('visibilitychange', function () {
+      if (modo === 'sonido') return;
+      if (document.hidden) { if (yt) { vaciar(); raiz.classList.remove('flotando'); modo = 'portada'; } }
+      else if (aVista && autoActivo && !yt) previa();
+    });
+
+    if (reduce || ahorro) return;
     function arrancar() {
-      modo = 'previa';
-      new IntersectionObserver(function (e) {
-        aVista = e[0].isIntersecting;
-        if (modo !== 'previa') return;
-        if (aVista && !document.hidden) previa(); else vaciar();
-      }, { threshold: 0.35 }).observe(raiz);
-      document.addEventListener('visibilitychange', function () {
-        if (modo !== 'previa') return;
-        if (document.hidden) vaciar(); else if (aVista) previa();
-      });
+      autoActivo = true;
+      if (aVista && !yt && modo !== 'sonido' && !document.hidden) previa();
     }
-    if (document.readyState === 'complete') setTimeout(arrancar, 1500);
-    else window.addEventListener('load', function () { setTimeout(arrancar, 1500); });
+    if (document.readyState === 'complete') arrancar();
+    else window.addEventListener('load', arrancar);
   }
 
   /* Testimonios en seccion horizontal: mientras la seccion queda fija, el
