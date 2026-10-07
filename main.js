@@ -236,7 +236,7 @@
           f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), YT);
         }, 250);
         /* respaldo: si YouTube no avisa que arranco, se muestra igual */
-        encender = setTimeout(function () { raiz.classList.add('en-vivo'); }, 4000);
+        encender = setTimeout(function () { raiz.classList.add('en-vivo'); }, 6000);
       });
       lugar.appendChild(f);
     }
@@ -257,10 +257,11 @@
       if (estado === null) return;
       yt.estado = estado;
       pausa.classList.toggle('pausado', estado === 2);
-      /* la portada se va cuando el video corre de verdad; el margen tapa la barra de titulo del arranque */
+      /* la portada se va cuando el video corre de verdad, despues de que YouTube
+         esconde el titulo y los controles que muestra al arrancar */
       if (estado === 1 && !raiz.classList.contains('en-vivo')) {
         clearTimeout(encender);
-        encender = setTimeout(function () { raiz.classList.add('en-vivo'); }, 600);
+        encender = setTimeout(function () { raiz.classList.add('en-vivo'); }, 2500);
       }
     });
 

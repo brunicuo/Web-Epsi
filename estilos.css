@@ -91,6 +91,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 /* hero */
 .hero { display: grid; grid-template-columns: 1.05fr 0.95fr; gap: 64px; align-items: center; }
 .hero-inicio { grid-template-columns: 1.12fr 0.88fr; gap: 56px; }
+.hero-inicio > *, .hero-inicio .hero-col > * { min-width: 0; }
 .pill { display: inline-flex; align-items: center; gap: 10px; align-self: flex-start; padding: 8px 16px; border-radius: 999px; background: #EFF3EC; color: var(--verde); font-size: 14px; font-weight: 700; }
 .hero-col { display: flex; flex-direction: column; gap: 24px; }
 .hero-ctas { display: flex; flex-wrap: wrap; gap: 14px; }
@@ -304,6 +305,9 @@ ul { margin: 0; padding: 0; list-style: none; }
 .footer { background: var(--tinta); color: var(--blanco); padding: 64px 0 40px; }
 .footer img { align-self: flex-start; width: auto; max-width: 100%; height: auto; }
 .footer-grid { display: grid; grid-template-columns: 1.4fr repeat(3, .7fr); gap: 40px; }
+/* el mail es una sola palabra larga: que se parta antes que empujar la columna afuera */
+.footer-grid > * { min-width: 0; }
+.footer-grid a { overflow-wrap: anywhere; }
 .footer h4 { margin: 0 0 4px; font-size: 13px; font-weight: 800; letter-spacing: .1em; text-transform: uppercase; color: var(--amarillo); }
 .footer a { color: #E8E4DA; font-size: 15px; }
 .footer a:hover { color: var(--blanco); }
@@ -345,6 +349,19 @@ ul { margin: 0; padding: 0; list-style: none; }
   .cta-final { flex-direction: column; align-items: flex-start; }
   .cta-sec { justify-content: flex-start; }
   .escenario-sonido { left: 12px; bottom: 12px; font-size: 13px; }
+  /* inicio en celular: titulo, boton, video de borde a borde y despues las garantias */
+  .sec-inicio { padding-top: 28px; }
+  .hero-inicio { gap: 20px; }
+  .hero-inicio .hero-col { display: contents; }
+  .hero-inicio .video { order: 1; margin: 0 -20px; padding: 0; }
+  .hero-inicio .trust { order: 2; }
+  .hero-inicio .video-bg { display: none; }
+  .hero-inicio .escenario { border-radius: 0; box-shadow: none; }
+  .hero-inicio .btn-lg { height: 52px; font-size: 16px; }
+  /* con la letra del telefono agrandada, mejor dos renglones que un titulo cortado */
+  .hero-titulo .linea { white-space: normal; }
+  .escenario-minis .mini { justify-content: center; padding: 9px 8px; }
+  .escenario-minis .mini img { display: none; }
   /* en celular flota abajo a la izquierda, para no tapar el boton de WhatsApp */
   .escenario.flotando .escenario-marco { inset: auto auto 16px 12px; width: 62vw; border-radius: 12px; }
   .escenario-minis { padding: 0 16px 16px; gap: 8px; }
