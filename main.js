@@ -154,8 +154,8 @@
   /* Escenario del inicio. Los videos arrancan solos, sin sonido y con
      subtitulos, y rotan cada 15 s. Tocar activa el audio sobre el mismo
      reproductor, sin recargarlo. Si se baja con un video andando, sigue en una
-     ventana flotante que se puede cerrar: en computadora siempre, en celular
-     solo si se activo el sonido. */
+     ventana flotante que se puede cerrar (en celular, mas chica mientras esta
+     sin sonido). Si se cierra, la vista previa no vuelve a flotar sola. */
   function escenario() {
     var raiz = document.querySelector('.escenario');
     if (!raiz) return;
@@ -172,7 +172,6 @@
     var YT = 'https://www.youtube-nocookie.com';
     var TURNO = 15000;
     var ahorro = navigator.connection && navigator.connection.saveData;
-    var escritorio = window.matchMedia('(min-width: 721px)');
     var idx = 0, modo = 'portada', autoActivo = false, aVista = true, cerrado = false;
     var yt = null, reloj = null, encender = null, escuchar = null, verificar = null;
     raiz.style.setProperty('--turno', TURNO / 1000 + 's');
@@ -325,7 +324,7 @@
         return;
       }
       if (!yt) return;
-      if (!cerrado && (modo === 'sonido' || escritorio.matches)) raiz.classList.add('flotando');
+      if (!cerrado) raiz.classList.add('flotando');
       else if (modo !== 'sonido') { vaciar(); modo = 'portada'; }
     }
 

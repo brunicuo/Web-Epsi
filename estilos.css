@@ -364,6 +364,11 @@ ul { margin: 0; padding: 0; list-style: none; }
   .escenario-minis .mini img { display: none; }
   /* en celular flota abajo a la izquierda, para no tapar el boton de WhatsApp */
   .escenario.flotando .escenario-marco { inset: auto auto 16px 12px; width: 62vw; border-radius: 12px; }
+  /* sin sonido la ventana es mas chica y el boton queda solo con el icono */
+  .escenario.flotando:not(.con-sonido) .escenario-marco { width: 46vw; }
+  .escenario.flotando:not(.con-sonido) .marco-escuchar { padding: 0 4px; }
+  .escenario.flotando:not(.con-sonido) .marco-escuchar span:last-child { display: none; }
+  .marco-cerrar { width: 30px; height: 30px; top: 6px; right: 6px; }
   .escenario-minis { padding: 0 16px 16px; gap: 8px; }
   .mini img { width: 44px; height: 26px; }
   .pila { --alto-carta: 250px; --desfase: 16px; gap: 28px; }
