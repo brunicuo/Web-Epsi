@@ -16,7 +16,6 @@
     });
     if (reduce || !('IntersectionObserver' in window)) {
       targets.forEach(function (el) { el.classList.add('in'); });
-      document.querySelectorAll('.path-draw').forEach(function (p) { p.closest('svg').classList.add('in'); });
       return;
     }
     var io = new IntersectionObserver(function (entries) {
@@ -27,15 +26,6 @@
       });
     }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
     targets.forEach(function (el) { io.observe(el); });
-
-    var pio = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        e.target.classList.add('in');
-        pio.unobserve(e.target);
-      });
-    }, { threshold: 0.4 });
-    document.querySelectorAll('.path-draw').forEach(function (p) { pio.observe(p.closest('svg')); });
   }
 
   /* 2. Números que cuentan desde cero */
@@ -80,121 +70,88 @@
     nodos.forEach(function (n) { io.observe(n); });
   }
 
-  /* 3. Tarjetas de "cómo es trabajar con nosotros": se destaca una por vez */
-  function ciclo() {
-    var cards = Array.prototype.slice.call(document.querySelectorAll('.cyc'));
-    if (!cards.length || reduce) return;
-    var i = 0, pausado = false;
-    function aplicar() { cards.forEach(function (c, k) { c.classList.toggle('is-active', k === i); }); }
-    aplicar();
-    cards.forEach(function (c) {
-      c.addEventListener('mouseenter', function () { pausado = true; });
-      c.addEventListener('mouseleave', function () { pausado = false; });
+  /* 3. Tarjetas de "cómo es trabajar con nosotros": cerradas, se abren al tocar */
+  function plegables() {
+    document.querySelectorAll('.plegable').forEach(function (tarjeta) {
+      var boton = tarjeta.querySelector('.plegable-btn');
+      var texto = document.getElementById(boton.getAttribute('aria-controls'));
+      boton.addEventListener('click', function () {
+        var abrir = boton.getAttribute('aria-expanded') !== 'true';
+        boton.setAttribute('aria-expanded', String(abrir));
+        texto.hidden = !abrir;
+      });
     });
-    setInterval(function () {
-      if (pausado) return;
-      i = (i + 1) % cards.length;
-      aplicar();
-    }, 3200);
   }
 
-  /* 4. Servicios: chips + panel, con rotación automática y swipe */
+  /* 4. Servicios: al tocar una situacion se abre su respuesta; tocarla de
+     nuevo la cierra. En celular la respuesta se inserta debajo del chip. */
   function servicios() {
     var chips = Array.prototype.slice.call(document.querySelectorAll('.chip[data-servicio]'));
     var panel = document.getElementById('panel-servicio');
     if (!chips.length || !panel) return;
-    var datos = JSON.parse(document.getElementById('datos-servicios').textContent);
-    var idx = 0, pausado = false;
+    var textos = JSON.parse(document.getElementById('datos-servicios').textContent);
+    var desc = panel.querySelector('.panel-desc');
+    var idx = -1;
     var listaChips = chips[0].parentNode;
     var acordeon = window.matchMedia('(max-width: 720px)');
 
-    /* En celular el panel viaja: se inserta justo debajo del chip elegido,
-       asi la respuesta aparece donde el dedo toco y no 400px mas abajo. */
-    function ubicarPanel() {
-      var destino, refChip;
-      if (acordeon.matches) {
-        refChip = chips[idx];
-        destino = refChip.nextSibling;
-        if (panel.previousElementSibling === refChip) return;
-      } else {
-        refChip = null;
-        destino = listaChips.nextSibling;
-        if (panel.previousElementSibling === listaChips) return;
-      }
-      var ancla = refChip || listaChips;
-      var antes = ancla.getBoundingClientRect().top;
-      (refChip ? listaChips : listaChips.parentNode).insertBefore(panel, destino);
-      var corrimiento = ancla.getBoundingClientRect().top - antes;
-      if (corrimiento) {
-        try { window.scrollBy({ top: corrimiento, left: 0, behavior: 'instant' }); }
-        catch (e) { window.scrollBy(0, corrimiento); }
-      }
+    function desplazar(px, modo) {
+      try { window.scrollBy({ top: px, left: 0, behavior: modo }); }
+      catch (e) { window.scrollBy(0, px); }
     }
 
-    /* Si el panel recien abierto se corta abajo, acercamos lo justo para que
-       entre entero, cuidando que el chip elegido siga a la vista. */
+    /* Mueve el panel a su lugar sin que el chip tocado salte en pantalla */
+    function ubicarPanel() {
+      var ref = (acordeon.matches && idx >= 0) ? chips[idx] : listaChips;
+      if (panel.previousElementSibling === ref) return;
+      var antes = ref.getBoundingClientRect().top;
+      ref.parentNode.insertBefore(panel, ref.nextSibling);
+      var corrimiento = ref.getBoundingClientRect().top - antes;
+      if (corrimiento) desplazar(corrimiento, 'instant');
+    }
+
+    /* Si la respuesta recien abierta se corta abajo, acercamos lo justo */
     function acercarPanel() {
-      if (!acordeon.matches) return;
+      if (idx < 0) return;
       var sobra = panel.getBoundingClientRect().bottom - window.innerHeight + 16;
       if (sobra <= 8) return;
-      var margen = chips[idx].getBoundingClientRect().top - 84;
-      var mover = Math.min(sobra, margen);
-      if (mover > 8) {
-        try { window.scrollBy({ top: mover, left: 0, behavior: 'smooth' }); }
-        catch (e) { window.scrollBy(0, mover); }
-      }
+      var mover = Math.min(sobra, chips[idx].getBoundingClientRect().top - 84);
+      if (mover > 8) desplazar(mover, 'smooth');
     }
 
-    function pintar() {
-      var d = datos[idx];
-      panel.querySelector('.tag').textContent = '▸ ' + d.tag;
-      panel.querySelector('h3').textContent = d.titulo;
-      panel.querySelector('.panel-desc').textContent = d.texto;
-      panel.querySelector('.panel-cta .txt').textContent = d.cta;
-      document.querySelector('.panel-num').textContent = '0' + (idx + 1);
-      chips.forEach(function (c, i) { c.setAttribute('aria-pressed', i === idx ? 'true' : 'false'); });
+    function elegir(i) {
+      idx = (idx === i) ? -1 : i;
+      chips.forEach(function (c, k) { c.setAttribute('aria-expanded', String(k === idx)); });
+      if (idx < 0) { panel.hidden = true; return; }
+      desc.textContent = textos[idx];
+      panel.hidden = false;
       ubicarPanel();
-      var main = panel.querySelector('.panel-main');
-      main.style.animation = 'none';
-      void main.offsetWidth;
-      main.style.animation = '';
+      panel.style.animation = 'none';
+      void panel.offsetWidth;
+      panel.style.animation = '';
+      acercarPanel();
     }
+
     chips.forEach(function (c, i) {
-      c.addEventListener('click', function () { idx = i; pausado = true; pintar(); acercarPanel(); });
+      c.addEventListener('click', function () { elegir(i); });
     });
-    var stage = panel;
-    var x0 = null, y0 = null;
-    stage.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
-    stage.addEventListener('touchend', function (e) {
-      if (x0 === null) return;
-      var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
-      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
-        idx = (idx + (dx < 0 ? 1 : -1) + datos.length) % datos.length;
-        pausado = true;
-        pintar();
-        acercarPanel();
-      }
-      x0 = null;
-    }, { passive: true });
-    pintar();
-    if (acordeon.addEventListener) {
-      acordeon.addEventListener('change', ubicarPanel);
-    } else if (acordeon.addListener) {
-      acordeon.addListener(ubicarPanel);
-    }
-    if (!reduce) {
-      setInterval(function () {
-        /* La rotacion automatica queda solo en escritorio: en el acordeon
-           moveria el panel de lugar mientras la persona esta leyendo. */
-        if (pausado || acordeon.matches) return;
-        idx = (idx + 1) % datos.length;
-        pintar();
-      }, 4500);
-    }
+    if (acordeon.addEventListener) acordeon.addEventListener('change', ubicarPanel);
+    else if (acordeon.addListener) acordeon.addListener(ubicarPanel);
   }
 
-  /* 5. Videos de YouTube: la tapa se cambia por el reproductor recien al tocar
-     el play, asi la home no carga los scripts de YouTube de entrada. */
+  /* 5. Videos de YouTube: el reproductor se crea recien al tocar el play, asi
+     la home no carga los scripts de YouTube de entrada. */
+  function reproductor(id, titulo) {
+    var marco = document.createElement('iframe');
+    marco.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) +
+      '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+    marco.title = titulo || 'Video';
+    marco.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    marco.setAttribute('allowfullscreen', '');
+    marco.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    return marco;
+  }
+
   function videos() {
     document.querySelectorAll('.play[data-youtube]').forEach(function (boton) {
       boton.addEventListener('click', function () {
@@ -202,19 +159,99 @@
         if (!id) return;
         var caja = boton.parentElement;
         if (caja.querySelector('.video-marco')) return;
-        var marco = document.createElement('iframe');
+        var marco = reproductor(id, boton.getAttribute('data-titulo'));
         marco.className = 'video-marco';
-        marco.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) +
-          '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
-        marco.title = boton.getAttribute('data-titulo') || 'Video';
-        marco.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-        marco.setAttribute('allowfullscreen', '');
-        marco.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
         caja.appendChild(marco);
         caja.classList.add('reproduciendo');
         marco.focus();
       });
     });
+  }
+
+  /* Circulos de clientes del inicio: con video abren la ventana; sin video
+     todavia, llevan a la seccion de testimonios. */
+  function historias() {
+    var modal = document.getElementById('modal-video');
+    var lugar = modal && modal.querySelector('.modal-marco');
+    function cerrar() { if (modal.open) modal.close(); }
+    if (modal) {
+      modal.addEventListener('close', function () { lugar.innerHTML = ''; });
+      modal.querySelector('.modal-cerrar').addEventListener('click', cerrar);
+      modal.addEventListener('click', function (e) { if (e.target === modal) cerrar(); });
+    }
+    document.querySelectorAll('.historia').forEach(function (h) {
+      h.addEventListener('click', function () {
+        var id = (h.getAttribute('data-youtube') || '').trim();
+        if (!id || !modal || typeof modal.showModal !== 'function') {
+          var destino = document.getElementById('testimonios');
+          if (destino) destino.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
+          return;
+        }
+        modal.classList.toggle('vertical', h.getAttribute('data-formato') === 'vertical');
+        lugar.innerHTML = '';
+        lugar.appendChild(reproductor(id, h.getAttribute('data-titulo')));
+        modal.showModal();
+      });
+    });
+  }
+
+  /* Carrusel de testimonios: avanza solo mientras esta a la vista y nadie
+     lo esta usando; flechas y puntos para moverlo a mano. */
+  function carrusel() {
+    var raiz = document.querySelector('.carrusel');
+    if (!raiz) return;
+    var pista = raiz.querySelector('.carrusel-pista');
+    var items = pista.children;
+    var puntos = raiz.querySelector('.carrusel-puntos');
+    var visible = false, ocupado = false, reanudar = null;
+
+    function paso() { return items.length > 1 ? items[1].offsetLeft - items[0].offsetLeft : pista.clientWidth; }
+    function ultimo() { return Math.max(0, Math.round((pista.scrollWidth - pista.clientWidth) / paso())); }
+    function actual() { return Math.round(pista.scrollLeft / paso()); }
+    function ir(i) { pista.scrollTo({ left: i * paso(), behavior: reduce ? 'auto' : 'smooth' }); }
+
+    function dibujarPuntos() {
+      var n = ultimo() + 1;
+      if (puntos.children.length !== n) {
+        puntos.innerHTML = '';
+        for (var k = 0; k < n; k++) puntos.appendChild(document.createElement('i'));
+      }
+      var a = Math.min(actual(), n - 1);
+      Array.prototype.forEach.call(puntos.children, function (p, k) { p.classList.toggle('activo', k === a); });
+      raiz.querySelector('.carrusel-nav').hidden = n < 2;
+    }
+
+    function pausar() {
+      ocupado = true;
+      clearTimeout(reanudar);
+      reanudar = setTimeout(function () { ocupado = false; }, 8000);
+    }
+
+    raiz.querySelectorAll('.carrusel-flecha').forEach(function (b) {
+      b.addEventListener('click', function () {
+        pausar();
+        var destino = actual() + Number(b.getAttribute('data-dir'));
+        if (destino > ultimo()) destino = 0;
+        if (destino < 0) destino = ultimo();
+        ir(destino);
+      });
+    });
+    pista.addEventListener('scroll', dibujarPuntos, { passive: true });
+    pista.addEventListener('pointerdown', pausar, { passive: true });
+    pista.addEventListener('touchstart', pausar, { passive: true });
+    /* solo con mouse: en pantallas tactiles el "mouse encima" simulado no se va nunca */
+    raiz.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') { ocupado = true; clearTimeout(reanudar); } });
+    raiz.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') ocupado = false; });
+    raiz.addEventListener('focusin', pausar);
+    window.addEventListener('resize', dibujarPuntos);
+    dibujarPuntos();
+
+    if (reduce || !('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }, { threshold: 0.5 }).observe(pista);
+    setInterval(function () {
+      if (!visible || ocupado || document.hidden) return;
+      ir(actual() >= ultimo() ? 0 : actual() + 1);
+    }, 5000);
   }
 
   /* 6. Preguntas frecuentes */
@@ -259,9 +296,11 @@
   document.addEventListener('DOMContentLoaded', function () {
     reveals();
     contadores();
-    ciclo();
+    plegables();
     servicios();
     videos();
+    historias();
+    carrusel();
     preguntas();
     menu();
   });
