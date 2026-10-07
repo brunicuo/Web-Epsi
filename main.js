@@ -169,6 +169,7 @@
     var pausa = raiz.querySelector('.marco-pausa');
     var titulo = raiz.querySelector('.escenario-titulo');
     var sub = raiz.querySelector('.escenario-sub');
+    var etiqueta = raiz.querySelector('.escenario-etiqueta');
     var YT = 'https://www.youtube-nocookie.com';
     var TURNO = 15000;
     var ahorro = navigator.connection && navigator.connection.saveData;
@@ -200,6 +201,7 @@
       minis.forEach(function (b, k) { b.classList.toggle('activa', k === idx); b.setAttribute('aria-pressed', String(k === idx)); });
       titulo.textContent = escenas[idx].getAttribute('data-nombre');
       sub.textContent = escenas[idx].getAttribute('data-sub');
+      etiqueta.textContent = escenas[idx].getAttribute('data-etiqueta') || 'Video';
     }
     function mandar(func, args) {
       if (yt && yt.frame.contentWindow) {
