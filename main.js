@@ -135,19 +135,7 @@
     return marco;
   }
 
-  /* Portadas tomadas de YouTube: si el video no tiene la imagen en alta
-     resolucion, YouTube devuelve un gris de 120px; ahi se usa la estandar. */
-  function portadaYT(img) {
-    function revisar() {
-      if (img.naturalWidth && img.naturalWidth < 200 && img.src.indexOf('maxresdefault') > -1) {
-        img.src = img.src.replace('maxresdefault', 'hqdefault');
-      }
-    }
-    if (img.complete) revisar(); else img.addEventListener('load', revisar);
-  }
-
   function videos() {
-    document.querySelectorAll('img[data-portada-yt]').forEach(portadaYT);
     document.querySelectorAll('.play[data-youtube]').forEach(function (boton) {
       boton.addEventListener('click', function () {
         var id = (boton.getAttribute('data-youtube') || '').trim();
@@ -197,7 +185,6 @@
       var img = document.createElement('img');
       img.src = e.querySelector('img').getAttribute('src');
       img.alt = '';
-      if (img.src.indexOf('i.ytimg.com') > -1) portadaYT(img);
       var nombre = document.createElement('span');
       nombre.textContent = e.getAttribute('data-mini') || e.getAttribute('data-nombre');
       b.appendChild(img);
@@ -405,7 +392,7 @@
       alto.style.height = '';
       tren.style.transform = '';
       var disponible = window.innerHeight - altoNav();
-      activo = !reduce && disponible >= 480 && pegado.scrollHeight <= disponible - 16;
+      activo = !reduce && disponible >= 480 && pegado.scrollHeight <= disponible - 8;
       if (activo) {
         seccion.classList.add('horiz-activo');
         recorrido = Math.max(0, tren.scrollWidth - pegado.clientWidth);
