@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function altoNav() { return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav')) || 0; }
 
   /* 1. Aparición de bloques al entrar en pantalla */
   function reveals() {
@@ -70,73 +71,55 @@
     nodos.forEach(function (n) { io.observe(n); });
   }
 
-  /* 3. Tarjetas de "cómo es trabajar con nosotros": cerradas, se abren al tocar */
-  function plegables() {
-    document.querySelectorAll('.plegable').forEach(function (tarjeta) {
-      var boton = tarjeta.querySelector('.plegable-btn');
-      var texto = document.getElementById(boton.getAttribute('aria-controls'));
-      boton.addEventListener('click', function () {
-        var abrir = boton.getAttribute('aria-expanded') !== 'true';
-        boton.setAttribute('aria-expanded', String(abrir));
-        texto.hidden = !abrir;
+  /* 3. Las tarjetas apiladas de "cómo es trabajar" son solo CSS (sticky). */
+
+  /* 4. Servicios en modo teleprompter: se ilumina la situacion que pasa por el
+     centro de la pantalla y su respuesta aparece en el recuadro fijo. */
+  function teleprompter() {
+    var items = Array.prototype.slice.call(document.querySelectorAll('.tele-item'));
+    var texto = document.querySelector('.tele-texto');
+    var datos = document.getElementById('datos-servicios');
+    if (!items.length || !texto || !datos) return;
+    var textos = JSON.parse(datos.textContent);
+    var actual = 0, pendiente = false, mirando = false;
+
+    function activar(i) {
+      if (i === actual) return;
+      actual = i;
+      items.forEach(function (it, k) { it.classList.toggle('activa', k === i); });
+      texto.textContent = textos[i];
+      texto.classList.remove('cambio');
+      void texto.offsetWidth;
+      texto.classList.add('cambio');
+    }
+    function medir() {
+      pendiente = false;
+      var centro = medio(), mejor = 0, dist = Infinity;
+      items.forEach(function (it, k) {
+        var r = it.getBoundingClientRect();
+        var d = Math.abs(r.top + r.height / 2 - centro);
+        if (d < dist) { dist = d; mejor = k; }
       });
+      activar(mejor);
+    }
+    function alScroll() { if (!pendiente) { pendiente = true; requestAnimationFrame(medir); } }
+    /* el centro del area visible, debajo del menu fijo */
+    function medio() { return (altoNav() + window.innerHeight) / 2; }
+
+    items.forEach(function (it, k) {
+      it.addEventListener('click', function () {
+        activar(k);
+        var r = it.getBoundingClientRect();
+        window.scrollBy({ top: r.top + r.height / 2 - medio(), left: 0, behavior: reduce ? 'auto' : 'smooth' });
+      });
+      it.addEventListener('focus', function () { activar(k); });
     });
-  }
-
-  /* 4. Servicios: al tocar una situacion se abre su respuesta; tocarla de
-     nuevo la cierra. En celular la respuesta se inserta debajo del chip. */
-  function servicios() {
-    var chips = Array.prototype.slice.call(document.querySelectorAll('.chip[data-servicio]'));
-    var panel = document.getElementById('panel-servicio');
-    if (!chips.length || !panel) return;
-    var textos = JSON.parse(document.getElementById('datos-servicios').textContent);
-    var desc = panel.querySelector('.panel-desc');
-    var idx = -1;
-    var listaChips = chips[0].parentNode;
-    var acordeon = window.matchMedia('(max-width: 720px)');
-
-    function desplazar(px, modo) {
-      try { window.scrollBy({ top: px, left: 0, behavior: modo }); }
-      catch (e) { window.scrollBy(0, px); }
-    }
-
-    /* Mueve el panel a su lugar sin que el chip tocado salte en pantalla */
-    function ubicarPanel() {
-      var ref = (acordeon.matches && idx >= 0) ? chips[idx] : listaChips;
-      if (panel.previousElementSibling === ref) return;
-      var antes = ref.getBoundingClientRect().top;
-      ref.parentNode.insertBefore(panel, ref.nextSibling);
-      var corrimiento = ref.getBoundingClientRect().top - antes;
-      if (corrimiento) desplazar(corrimiento, 'instant');
-    }
-
-    /* Si la respuesta recien abierta se corta abajo, acercamos lo justo */
-    function acercarPanel() {
-      if (idx < 0) return;
-      var sobra = panel.getBoundingClientRect().bottom - window.innerHeight + 16;
-      if (sobra <= 8) return;
-      var mover = Math.min(sobra, chips[idx].getBoundingClientRect().top - 84);
-      if (mover > 8) desplazar(mover, 'smooth');
-    }
-
-    function elegir(i) {
-      idx = (idx === i) ? -1 : i;
-      chips.forEach(function (c, k) { c.setAttribute('aria-expanded', String(k === idx)); });
-      if (idx < 0) { panel.hidden = true; return; }
-      desc.textContent = textos[idx];
-      panel.hidden = false;
-      ubicarPanel();
-      panel.style.animation = 'none';
-      void panel.offsetWidth;
-      panel.style.animation = '';
-      acercarPanel();
-    }
-
-    chips.forEach(function (c, i) {
-      c.addEventListener('click', function () { elegir(i); });
-    });
-    if (acordeon.addEventListener) acordeon.addEventListener('change', ubicarPanel);
-    else if (acordeon.addListener) acordeon.addListener(ubicarPanel);
+    /* solo se escucha el scroll mientras la lista esta en pantalla */
+    if (!('IntersectionObserver' in window)) { window.addEventListener('scroll', alScroll, { passive: true }); return; }
+    new IntersectionObserver(function (e) {
+      if (e[0].isIntersecting && !mirando) { window.addEventListener('scroll', alScroll, { passive: true }); mirando = true; alScroll(); }
+      else if (!e[0].isIntersecting && mirando) { window.removeEventListener('scroll', alScroll); mirando = false; }
+    }).observe(items[0].parentNode);
   }
 
   /* 5. Videos de YouTube: el reproductor se crea recien al tocar el play, asi
@@ -168,90 +151,159 @@
     });
   }
 
-  /* Circulos de clientes del inicio: con video abren la ventana; sin video
-     todavia, llevan a la seccion de testimonios. */
-  function historias() {
-    var modal = document.getElementById('modal-video');
-    var lugar = modal && modal.querySelector('.modal-marco');
-    function cerrar() { if (modal.open) modal.close(); }
-    if (modal) {
-      modal.addEventListener('close', function () { lugar.innerHTML = ''; });
-      modal.querySelector('.modal-cerrar').addEventListener('click', cerrar);
-      modal.addEventListener('click', function (e) { if (e.target === modal) cerrar(); });
-    }
-    document.querySelectorAll('.historia').forEach(function (h) {
-      h.addEventListener('click', function () {
-        var id = (h.getAttribute('data-youtube') || '').trim();
-        if (!id || !modal || typeof modal.showModal !== 'function') {
-          var destino = document.getElementById('testimonios');
-          if (destino) destino.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth' });
-          return;
-        }
-        modal.classList.toggle('vertical', h.getAttribute('data-formato') === 'vertical');
-        lugar.innerHTML = '';
-        lugar.appendChild(reproductor(id, h.getAttribute('data-titulo')));
-        modal.showModal();
-      });
+  /* Escenario del inicio: los videos arrancan solos, sin sonido y con
+     subtitulos, y rotan cada 15 s. Tocar la pantalla lo reproduce con sonido.
+     Nada de YouTube se carga hasta que la pagina termino y el escenario se ve. */
+  function escenario() {
+    var raiz = document.querySelector('.escenario');
+    if (!raiz) return;
+    raiz.querySelectorAll('.escena').forEach(function (e) {
+      if (!(e.getAttribute('data-youtube') || '').trim()) e.parentNode.removeChild(e);
     });
+    var escenas = Array.prototype.slice.call(raiz.querySelectorAll('.escena'));
+    if (!escenas.length) return;
+    var marco = raiz.querySelector('.escenario-marco');
+    var titulo = raiz.querySelector('.escenario-titulo');
+    var sub = raiz.querySelector('.escenario-sub');
+    var TURNO = 15000;
+    var ahorro = navigator.connection && navigator.connection.saveData;
+    var idx = 0, modo = 'portada', aVista = false, reloj = null, encender = null;
+    raiz.style.setProperty('--turno', TURNO / 1000 + 's');
+
+    var minis = escenas.length < 2 ? [] : escenas.map(function (e, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mini';
+      b.setAttribute('aria-label', 'Ver: ' + e.getAttribute('data-titulo'));
+      var img = document.createElement('img');
+      img.src = e.querySelector('img').getAttribute('src');
+      img.alt = '';
+      var nombre = document.createElement('span');
+      nombre.textContent = e.getAttribute('data-mini') || e.getAttribute('data-nombre');
+      b.appendChild(img);
+      b.appendChild(nombre);
+      b.appendChild(document.createElement('i'));
+      b.addEventListener('click', function () { elegir(i); });
+      raiz.querySelector('.escenario-minis').appendChild(b);
+      return b;
+    });
+
+    function idActual() { return escenas[idx].getAttribute('data-youtube').trim(); }
+    function pintar() {
+      escenas.forEach(function (e, k) { e.classList.toggle('activa', k === idx); });
+      minis.forEach(function (b, k) { b.classList.toggle('activa', k === idx); b.setAttribute('aria-pressed', String(k === idx)); });
+      titulo.textContent = escenas[idx].getAttribute('data-nombre');
+      sub.textContent = escenas[idx].getAttribute('data-sub');
+    }
+    function vaciar() {
+      clearTimeout(reloj);
+      clearTimeout(encender);
+      marco.innerHTML = '';
+      raiz.classList.remove('en-vivo', 'rotando');
+    }
+    function previa() {
+      vaciar();
+      var id = encodeURIComponent(idActual());
+      var f = document.createElement('iframe');
+      f.src = 'https://www.youtube-nocookie.com/embed/' + id + '?autoplay=1&mute=1&controls=0&playsinline=1' +
+        '&rel=0&cc_load_policy=1&cc_lang_pref=es&hl=es&disablekb=1&iv_load_policy=3&loop=1&playlist=' + id;
+      f.title = 'Vista previa sin sonido: ' + escenas[idx].getAttribute('data-titulo');
+      f.allow = 'autoplay; encrypted-media; picture-in-picture';
+      f.setAttribute('tabindex', '-1');
+      f.setAttribute('aria-hidden', 'true');
+      /* la portada tapa el arranque de YouTube (barra de titulo, negro) */
+      f.addEventListener('load', function () { encender = setTimeout(function () { raiz.classList.add('en-vivo'); }, 1500); });
+      marco.appendChild(f);
+      void raiz.offsetWidth;
+      raiz.classList.add('rotando');
+      if (escenas.length > 1) {
+        reloj = setTimeout(function () { idx = (idx + 1) % escenas.length; pintar(); previa(); }, TURNO);
+      }
+    }
+    function conSonido() {
+      vaciar();
+      modo = 'sonido';
+      raiz.classList.add('con-sonido');
+      marco.appendChild(reproductor(idActual(), escenas[idx].getAttribute('data-titulo')));
+    }
+    function elegir(i) {
+      idx = i;
+      pintar();
+      if (modo === 'sonido') conSonido();
+      else if (modo === 'previa' && aVista && !document.hidden) previa();
+    }
+
+    raiz.querySelector('.escenario-pantalla').addEventListener('click', function () {
+      if (modo !== 'sonido') conSonido();
+    });
+    pintar();
+    if (reduce || ahorro || !('IntersectionObserver' in window)) return;
+
+    function arrancar() {
+      modo = 'previa';
+      new IntersectionObserver(function (e) {
+        aVista = e[0].isIntersecting;
+        if (modo !== 'previa') return;
+        if (aVista && !document.hidden) previa(); else vaciar();
+      }, { threshold: 0.35 }).observe(raiz);
+      document.addEventListener('visibilitychange', function () {
+        if (modo !== 'previa') return;
+        if (document.hidden) vaciar(); else if (aVista) previa();
+      });
+    }
+    if (document.readyState === 'complete') setTimeout(arrancar, 1500);
+    else window.addEventListener('load', function () { setTimeout(arrancar, 1500); });
   }
 
-  /* Carrusel de testimonios: avanza solo mientras esta a la vista y nadie
-     lo esta usando; flechas y puntos para moverlo a mano. */
-  function carrusel() {
-    var raiz = document.querySelector('.carrusel');
-    if (!raiz) return;
-    var pista = raiz.querySelector('.carrusel-pista');
-    var items = pista.children;
-    var puntos = raiz.querySelector('.carrusel-puntos');
-    var visible = false, ocupado = false, reanudar = null;
+  /* Testimonios en seccion horizontal: mientras la seccion queda fija, el
+     scroll vertical mueve las tarjetas de costado. Si algo no entra en la
+     pantalla, o hay movimiento reducido, queda una fila con scroll nativo. */
+  function horizontal() {
+    var alto = document.querySelector('.horiz');
+    if (!alto) return;
+    var seccion = alto.parentNode;
+    var pegado = alto.querySelector('.horiz-pegado');
+    var ventana = alto.querySelector('.horiz-ventana');
+    var tren = alto.querySelector('.horiz-tren');
+    var barra = alto.querySelector('.horiz-barra i');
+    var recorrido = 0, activo = false, pendiente = false, medidas = '';
 
-    function paso() { return items.length > 1 ? items[1].offsetLeft - items[0].offsetLeft : pista.clientWidth; }
-    function ultimo() { return Math.max(0, Math.round((pista.scrollWidth - pista.clientWidth) / paso())); }
-    function actual() { return Math.round(pista.scrollLeft / paso()); }
-    function ir(i) { pista.scrollTo({ left: i * paso(), behavior: reduce ? 'auto' : 'smooth' }); }
-
-    function dibujarPuntos() {
-      var n = ultimo() + 1;
-      if (puntos.children.length !== n) {
-        puntos.innerHTML = '';
-        for (var k = 0; k < n; k++) puntos.appendChild(document.createElement('i'));
+    function pintar() {
+      pendiente = false;
+      if (activo) {
+        var avance = Math.min(recorrido, Math.max(0, altoNav() - alto.getBoundingClientRect().top));
+        tren.style.transform = 'translate3d(' + (-avance) + 'px,0,0)';
+        barra.style.width = (recorrido ? avance / recorrido * 100 : 100) + '%';
+      } else {
+        var max = ventana.scrollWidth - ventana.clientWidth;
+        barra.style.width = (max > 0 ? ventana.scrollLeft / max * 100 : 100) + '%';
       }
-      var a = Math.min(actual(), n - 1);
-      Array.prototype.forEach.call(puntos.children, function (p, k) { p.classList.toggle('activo', k === a); });
-      raiz.querySelector('.carrusel-nav').hidden = n < 2;
     }
-
-    function pausar() {
-      ocupado = true;
-      clearTimeout(reanudar);
-      reanudar = setTimeout(function () { ocupado = false; }, 8000);
+    function pedir() { if (!pendiente) { pendiente = true; requestAnimationFrame(pintar); } }
+    function preparar(forzar) {
+      /* en celular la barra del navegador cambia el alto al scrollear:
+         solo se rearma si cambia el ancho o el alto cambia de verdad */
+      var clave = window.innerWidth + 'x' + Math.round(window.innerHeight / 150);
+      if (!forzar && clave === medidas) return;
+      medidas = clave;
+      seccion.classList.remove('horiz-activo');
+      alto.style.height = '';
+      tren.style.transform = '';
+      var disponible = window.innerHeight - altoNav();
+      activo = !reduce && disponible >= 480 && pegado.scrollHeight <= disponible - 16;
+      if (activo) {
+        seccion.classList.add('horiz-activo');
+        recorrido = Math.max(0, tren.scrollWidth - pegado.clientWidth);
+        alto.style.height = (pegado.clientHeight + recorrido) + 'px';
+      }
+      pintar();
     }
-
-    raiz.querySelectorAll('.carrusel-flecha').forEach(function (b) {
-      b.addEventListener('click', function () {
-        pausar();
-        var destino = actual() + Number(b.getAttribute('data-dir'));
-        if (destino > ultimo()) destino = 0;
-        if (destino < 0) destino = ultimo();
-        ir(destino);
-      });
-    });
-    pista.addEventListener('scroll', dibujarPuntos, { passive: true });
-    pista.addEventListener('pointerdown', pausar, { passive: true });
-    pista.addEventListener('touchstart', pausar, { passive: true });
-    /* solo con mouse: en pantallas tactiles el "mouse encima" simulado no se va nunca */
-    raiz.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') { ocupado = true; clearTimeout(reanudar); } });
-    raiz.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') ocupado = false; });
-    raiz.addEventListener('focusin', pausar);
-    window.addEventListener('resize', dibujarPuntos);
-    dibujarPuntos();
-
-    if (reduce || !('IntersectionObserver' in window)) return;
-    new IntersectionObserver(function (e) { visible = e[0].isIntersecting; }, { threshold: 0.5 }).observe(pista);
-    setInterval(function () {
-      if (!visible || ocupado || document.hidden) return;
-      ir(actual() >= ultimo() ? 0 : actual() + 1);
-    }, 5000);
+    window.addEventListener('scroll', pedir, { passive: true });
+    ventana.addEventListener('scroll', pedir, { passive: true });
+    window.addEventListener('resize', function () { clearTimeout(preparar.t); preparar.t = setTimeout(function () { preparar(false); }, 150); });
+    window.addEventListener('load', function () { preparar(true); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { preparar(true); });
+    preparar(true);
   }
 
   /* 6. Preguntas frecuentes */
@@ -296,11 +348,10 @@
   document.addEventListener('DOMContentLoaded', function () {
     reveals();
     contadores();
-    plegables();
-    servicios();
+    teleprompter();
     videos();
-    historias();
-    carrusel();
+    escenario();
+    horizontal();
     preguntas();
     menu();
   });

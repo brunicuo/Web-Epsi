@@ -31,7 +31,7 @@
 <meta name="twitter:image" content="https://www.epsilonsoluciones.com.ar/assets/compartir.jpg">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link href="https://fonts.googleapis.com/css2?family=Figtree:wght@400;600;700;800;900&family=Fraunces:ital,opsz,wght@1,9..144,300&display=swap" rel="stylesheet">
+<link href="https://fonts.googleapis.com/css2?family=Figtree:ital,wght@0,400;0,600;0,700;0,800;0,900;1,900&display=swap" rel="stylesheet">
 <link rel="stylesheet" href="estilos.css">
 <script type="application/ld+json">
 {
@@ -89,7 +89,7 @@
         </a>
         <a class="btn btn-lg btn-linea" href="#video">
           <svg width="18" height="18" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M7 4.5v15l12.5-7.5z"/></svg>
-          Ver el video
+          Ver los videos
         </a>
       </div>
       <div class="trust">
@@ -97,81 +97,83 @@
         <span><svg width="22" height="16" viewBox="0 0 22 16" aria-hidden="true"><rect x="0.5" y="0.5" width="21" height="15" rx="3" fill="#FFFFFF" stroke="#D9D2C2"/><path d="M1 3.5A2.5 2.5 0 0 1 3.5 1h15A2.5 2.5 0 0 1 21 3.5V5.6H1z" fill="#74ACDF"/><path d="M1 10.4h20v2.1A2.5 2.5 0 0 1 18.5 15h-15A2.5 2.5 0 0 1 1 12.5z" fill="#74ACDF"/><circle cx="11" cy="8" r="1.8" fill="#F6B40E"/></svg>Atendemos en todo el país</span>
         <span><svg width="19" height="19" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9.5 3h5l-1.2 3.2h-2.6z"/><path d="M10.7 6.2L8.6 16.5 12 21l3.4-4.5-2.1-10.3"/></svg>Contadores matriculados</span>
       </div>
-      <div class="confian">
-        <div class="historias">
-          <button type="button" class="historia" data-youtube="" data-titulo="Testimonio de Labot" aria-label="Ver el testimonio en video de Labot">
-            <span class="historia-aro"><span class="historia-foto"><img src="assets/labot.png" alt="" class="logo-ancho"></span></span>
-            <span class="historia-play" aria-hidden="true"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></span>
-            <small>Labot</small>
-          </button>
-          <button type="button" class="historia" data-youtube="" data-titulo="Testimonio de Pogg's" aria-label="Ver el testimonio en video de Pogg's">
-            <span class="historia-aro"><span class="historia-foto"><img src="assets/poggs.png" alt="" style="--zoom:1.4"></span></span>
-            <span class="historia-play" aria-hidden="true"><svg width="11" height="11" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></span>
-            <small>Pogg's</small>
-          </button>
-        </div>
-        <div class="confian-txt">
-          <strong>Ya confían en nosotros</strong>
-          <span>“Sé cuánto gano en cada hamburguesa.” Alejo, Pogg's</span>
-        </div>
-      </div>
     </div>
 
     <div class="video" id="video" data-rv>
       <span class="video-bg" aria-hidden="true"></span>
-      <div class="video-card">
-        <img src="assets/portada-video.jpg" alt="Bruno, Juan Cruz y Nicolás, socios de Épsilon Soluciones">
-        <span class="video-vel" aria-hidden="true"></span>
-        <button class="play" data-youtube="pfWgjXkHvAE" data-titulo="Video de presentación de Épsilon Soluciones" aria-label="Reproducir video de presentación">
-          <svg width="34" height="34" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 4.5v15l12-7.5z"/></svg>
-        </button>
+      <div class="escenario" aria-label="Videos de clientes y de presentación">
+        <div class="escenario-pantalla">
+          <figure class="escena activa" data-youtube="eRP3cs8VYfg" data-titulo="Testimonio en video de Labot" data-nombre="Labot" data-sub="Testimonio en video">
+            <img src="assets/portada-labot.jpg" alt="Testimonio en video de Labot">
+          </figure>
+          <figure class="escena" data-youtube="" data-titulo="Testimonio en video de Pogg's" data-nombre="Pogg's" data-sub="Testimonio en video">
+            <img src="assets/poggs.png" alt="Testimonio en video de Pogg's">
+          </figure>
+          <figure class="escena" data-youtube="pfWgjXkHvAE" data-titulo="Video de presentación de Épsilon Soluciones" data-nombre="Conocé Épsilon en 2 minutos" data-mini="Épsilon" data-sub="Quiénes somos, cómo trabajamos y cómo te ayudamos">
+            <img src="assets/portada-video.jpg" alt="Bruno, Juan Cruz y Nicolás, socios de Épsilon Soluciones">
+          </figure>
+          <div class="escenario-marco"></div>
+          <button type="button" class="escenario-sonido">
+            <span class="escenario-sonido-ico" aria-hidden="true"><svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M7 4.5v15l12.5-7.5z"/></svg></span>
+            <span>Tocá para escuchar</span>
+          </button>
+        </div>
         <div class="video-pie">
           <div>
-            <strong style="font-size:18px">Conocé Épsilon en 2 minutos</strong>
-            <small>Quiénes somos, cómo trabajamos y cómo te ayudamos</small>
+            <strong class="escenario-titulo" style="font-size:18px">Labot</strong>
+            <small class="escenario-sub">Testimonio en video</small>
           </div>
           <span class="tag-amarillo">Video</span>
         </div>
+        <div class="escenario-minis"></div>
       </div>
     </div>
   </div>
 </section>
 
 <!-- CÓMO ES TRABAJAR CON NOSOTROS -->
-<section class="sec sec-bordo">
+<section class="sec sec-bordo sec-fija">
   <div class="wm" aria-hidden="true"><svg width="620" height="340" viewBox="0 0 620 340" fill="none" stroke="#FFFFFF" stroke-width="3" style="right:-30px;top:30px;opacity:.07"><path d="M10 320h600"/><rect x="60" y="210" width="70" height="110"/><rect x="170" y="160" width="70" height="160"/><rect x="280" y="110" width="70" height="210"/><rect x="390" y="60" width="70" height="260"/><path d="M60 230L200 180 330 120 480 40" stroke-linecap="round"/><path d="M430 34h56v56"/></svg></div>
   <div class="wrap">
     <div class="cabecera" data-rv data-rv-hijos>
       <h2 class="h2" style="max-width:720px">Cómo es <span class="hl">trabajar con nosotros</span>.</h2>
       <p class="lead">Un equipo cercano.</p>
     </div>
-    <div class="g4 plegables" data-rv data-rv-hijos>
-      <article class="card card-vidrio plegable">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FFCA08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.5 7.4L3 20.5l1.6-5.3A8.5 8.5 0 1 1 21 11.5z"/></svg>
-        <h3><button type="button" class="plegable-btn" aria-expanded="false" aria-controls="trabajar-1">Contacto directo<svg class="punta" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></h3>
-        <p class="plegable-txt" id="trabajar-1" hidden>Hablás por WhatsApp directamente con nosotros, sin pasar por intermediarios.</p>
+    <div class="pila" style="--cartas:4">
+      <article class="pila-carta" style="--i:0">
+        <div class="pila-contenido">
+          <div class="pila-top"><span class="pila-num">01</span><svg class="pila-ico" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.5 7.4L3 20.5l1.6-5.3A8.5 8.5 0 1 1 21 11.5z"/></svg></div>
+          <h3>Contacto directo</h3>
+          <p>Hablás con nosotros por WhatsApp, sin intermediarios.</p>
+        </div>
       </article>
-      <article class="card card-vidrio plegable">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FFCA08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l3 3 5-5"/></svg>
-        <h3><button type="button" class="plegable-btn" aria-expanded="false" aria-controls="trabajar-2">Orden y seguimiento<svg class="punta" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></h3>
-        <p class="plegable-txt" id="trabajar-2" hidden>Relevamos tu situación, organizamos vencimientos y prioridades, y evitamos que se te acumulen los temas.</p>
+      <article class="pila-carta" style="--i:1">
+        <div class="pila-contenido">
+          <div class="pila-top"><span class="pila-num">02</span><svg class="pila-ico" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="3" y="5" width="18" height="16" rx="2"/><path d="M3 10h18M8 3v4M16 3v4M8 15l3 3 5-5"/></svg></div>
+          <h3>Orden y seguimiento</h3>
+          <p>Organizamos vencimientos y prioridades para que no se te acumule nada.</p>
+        </div>
       </article>
-      <article class="card card-vidrio plegable">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FFCA08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg>
-        <h3><button type="button" class="plegable-btn" aria-expanded="false" aria-controls="trabajar-3">Números para decidir<svg class="punta" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></h3>
-        <p class="plegable-txt" id="trabajar-3" hidden>No nos quedamos en presentar impuestos o liquidar sueldos: te damos información útil para entender qué pasa en tu negocio.</p>
+      <article class="pila-carta" style="--i:2">
+        <div class="pila-contenido">
+          <div class="pila-top"><span class="pila-num">03</span><svg class="pila-ico" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 19V9M10 19V5M16 19v-7M22 19H2"/></svg></div>
+          <h3>Números para decidir</h3>
+          <p>Información clara para entender qué pasa en tu negocio.</p>
+        </div>
       </article>
-      <article class="card card-vidrio plegable">
-        <svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#FFCA08" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M17 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-3A3.5 3.5 0 0 0 7 18.5V20"/></svg>
-        <h3><button type="button" class="plegable-btn" aria-expanded="false" aria-controls="trabajar-4">Acompañamiento real<svg class="punta" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M6 9l6 6 6-6"/></svg></button></h3>
-        <p class="plegable-txt" id="trabajar-4" hidden>Cuando hace falta, coordinamos reuniones, revisamos desvíos y te ayudamos a decidir con más claridad.</p>
+      <article class="pila-carta" style="--i:3">
+        <div class="pila-contenido">
+          <div class="pila-top"><span class="pila-num">04</span><svg class="pila-ico" width="44" height="44" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="8" r="3.5"/><path d="M17 20v-1.5a3.5 3.5 0 0 0-3.5-3.5h-3A3.5 3.5 0 0 0 7 18.5V20"/></svg></div>
+          <h3>Acompañamiento real</h3>
+          <p>Estamos cerca cuando hay que revisar desvíos o decidir.</p>
+        </div>
       </article>
     </div>
   </div>
 </section>
 
 <!-- SERVICIOS -->
-<section class="sec sec-crema" id="servicios">
+<section class="sec sec-crema sec-fija" id="servicios">
   <span class="dots" style="top:28px;right:10px" aria-hidden="true"></span>
   <div class="wrap">
     <div class="cabecera-col" style="margin-bottom:36px" data-rv data-rv-hijos>
@@ -180,20 +182,21 @@
       <p class="lead">Elegí la situación en la que estás y mirá cómo te ayudamos.</p>
     </div>
 
-    <div class="chips" role="group" aria-label="Situaciones">
-      <button class="chip" data-servicio aria-expanded="false" aria-controls="panel-servicio">No sé si estoy ganando plata</button>
-      <button class="chip" data-servicio aria-expanded="false" aria-controls="panel-servicio">No sé si mis precios están bien</button>
-      <button class="chip" data-servicio aria-expanded="false" aria-controls="panel-servicio">Pierdo horas en tareas repetitivas</button>
-      <button class="chip" data-servicio aria-expanded="false" aria-controls="panel-servicio">Necesito ordenar mis impuestos</button>
-      <button class="chip" data-servicio aria-expanded="false" aria-controls="panel-servicio">Quiero saber cómo estoy con ARCA</button>
-      <button class="chip" data-servicio aria-expanded="false" aria-controls="panel-servicio">Necesito mis balances al día</button>
-      <button class="chip" data-servicio aria-expanded="false" aria-controls="panel-servicio">Tengo (o voy a tener) empleados</button>
-      <button class="chip" data-servicio aria-expanded="false" aria-controls="panel-servicio">Quiero armar una sociedad</button>
-      <button class="chip" data-servicio aria-expanded="false" aria-controls="panel-servicio">Quiero invertir mis excedentes</button>
-    </div>
-
-    <div class="panel" id="panel-servicio" role="region" aria-live="polite" hidden>
-      <p class="panel-desc"></p>
+    <div class="tele">
+      <div class="tele-lista" role="group" aria-label="Situaciones">
+        <button type="button" class="tele-item activa" aria-controls="tele-resp">No sé si estoy ganando plata</button>
+        <button type="button" class="tele-item" aria-controls="tele-resp">No sé si mis precios están bien</button>
+        <button type="button" class="tele-item" aria-controls="tele-resp">Pierdo horas en tareas repetitivas</button>
+        <button type="button" class="tele-item" aria-controls="tele-resp">Necesito ordenar mis impuestos</button>
+        <button type="button" class="tele-item" aria-controls="tele-resp">Quiero saber cómo estoy con ARCA</button>
+        <button type="button" class="tele-item" aria-controls="tele-resp">Necesito mis balances al día</button>
+        <button type="button" class="tele-item" aria-controls="tele-resp">Tengo (o voy a tener) empleados</button>
+        <button type="button" class="tele-item" aria-controls="tele-resp">Quiero armar una sociedad</button>
+        <button type="button" class="tele-item" aria-controls="tele-resp">Quiero invertir mis excedentes</button>
+      </div>
+      <div class="tele-resp" id="tele-resp" aria-live="polite">
+        <p class="tele-texto">Ordenamos tus costos para que sepas qué producto o servicio te deja plata y cuál no.</p>
+      </div>
     </div>
     <script type="application/json" id="datos-servicios">
 [
@@ -255,14 +258,17 @@
 </section>
 
 <!-- TESTIMONIOS -->
-<section class="sec sec-crema" id="testimonios">
-  <div class="wrap">
-    <div class="cabecera-col" style="margin-bottom:40px" data-rv data-rv-hijos>
-      <span class="kicker">Testimonios</span>
-      <h2 class="h2">Lo que cuentan quienes ya <span class="hl">trabajan con nosotros</span>.</h2>
-    </div>
-    <div class="carrusel" data-rv>
-      <div class="carrusel-pista" role="region" aria-label="Testimonios de clientes" tabindex="0">
+<section class="sec sec-crema sec-fija" id="testimonios">
+  <div class="horiz">
+    <div class="horiz-pegado">
+      <div class="wrap">
+        <div class="cabecera-col">
+          <span class="kicker">Testimonios</span>
+          <h2 class="h2">Lo que cuentan quienes ya <span class="hl">trabajan con nosotros</span>.</h2>
+        </div>
+      </div>
+      <div class="horiz-ventana" role="region" aria-label="Testimonios de clientes" tabindex="0">
+      <div class="horiz-tren">
       <figure class="quote">
         <div class="video-mini">
           <img src="assets/poggs.png" alt="">
@@ -276,7 +282,11 @@
         </figcaption>
       </figure>
       <figure class="quote">
-        <svg width="38" height="30" viewBox="0 0 40 32" fill="#7C2C37" aria-hidden="true"><path d="M0 32V19C0 8 6 1.5 16 0l1.5 4.5C11.5 6 9 10 9 14h7v18zm22 0V19C22 8 28 1.5 38 0l1.5 4.5C33.5 6 31 10 31 14h7v18z"/></svg>
+        <div class="video-mini video-mini-foto">
+          <img src="assets/portada-labot.jpg" alt="">
+          <button class="play" data-youtube="eRP3cs8VYfg" data-titulo="Testimonio en video de Labot" aria-label="Reproducir el testimonio en video de Labot"><svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true"><path d="M8 4.5v15l12-7.5z"/></svg></button>
+          <em>Video</em>
+        </div>
         <blockquote>Los sueldos y los costos de la SRL eran un dolor de cabeza todos los meses. Épsilon ordenó la liquidación y nos armó un análisis de costos que hoy usamos para decidir.</blockquote>
         <figcaption>
           <span class="marco" style="display:flex;align-items:center;justify-content:center;background:#fff;border:1px solid var(--borde);padding:6px"><img src="assets/labot.png" alt="Logo de Labot" style="width:100%;height:auto"></span>
@@ -301,13 +311,11 @@
         </figcaption>
       </figure>
       </div>
-      <div class="carrusel-nav">
-        <button type="button" class="carrusel-flecha" data-dir="-1" aria-label="Testimonio anterior"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M15 6l-6 6 6 6"/></svg></button>
-        <div class="carrusel-puntos" aria-hidden="true"></div>
-        <button type="button" class="carrusel-flecha" data-dir="1" aria-label="Testimonio siguiente"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 6l6 6-6 6"/></svg></button>
       </div>
+      <div class="wrap"><div class="horiz-barra" aria-hidden="true"><i></i></div></div>
     </div>
-
+  </div>
+  <div class="wrap">
     <div class="caso" data-rv>
       <div style="display:flex;flex-direction:column;gap:12px">
         <span class="chip-amarillo">CASO REAL</span>
@@ -538,11 +546,6 @@
     </div>
   </div>
 </footer>
-
-<dialog class="modal-video" id="modal-video" aria-label="Video">
-  <button type="button" class="modal-cerrar" aria-label="Cerrar video"><svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18"/></svg></button>
-  <div class="modal-marco"></div>
-</dialog>
 
 <a class="wa-flotante" href="https://wa.me/5492213607829" aria-label="Escribinos por WhatsApp">
   <svg width="26" height="26" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M21 11.5a8.4 8.4 0 0 1-12.5 7.4L3 20.5l1.6-5.3A8.5 8.5 0 1 1 21 11.5z"/></svg>
