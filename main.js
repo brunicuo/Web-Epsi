@@ -2,6 +2,7 @@
 (function () {
   'use strict';
   var reduce = window.matchMedia && window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  function altoNav() { return parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--nav')) || 0; }
 
   /* 1. Aparición de bloques al entrar en pantalla */
   function reveals() {
@@ -16,7 +17,6 @@
     });
     if (reduce || !('IntersectionObserver' in window)) {
       targets.forEach(function (el) { el.classList.add('in'); });
-      document.querySelectorAll('.path-draw').forEach(function (p) { p.closest('svg').classList.add('in'); });
       return;
     }
     var io = new IntersectionObserver(function (entries) {
@@ -27,15 +27,6 @@
       });
     }, { threshold: 0.15, rootMargin: '0px 0px -8% 0px' });
     targets.forEach(function (el) { io.observe(el); });
-
-    var pio = new IntersectionObserver(function (entries) {
-      entries.forEach(function (e) {
-        if (!e.isIntersecting) return;
-        e.target.classList.add('in');
-        pio.unobserve(e.target);
-      });
-    }, { threshold: 0.4 });
-    document.querySelectorAll('.path-draw').forEach(function (p) { pio.observe(p.closest('svg')); });
   }
 
   /* 2. Números que cuentan desde cero */
@@ -80,141 +71,372 @@
     nodos.forEach(function (n) { io.observe(n); });
   }
 
-  /* 3. Tarjetas de "cómo es trabajar con nosotros": se destaca una por vez */
-  function ciclo() {
-    var cards = Array.prototype.slice.call(document.querySelectorAll('.cyc'));
-    if (!cards.length || reduce) return;
-    var i = 0, pausado = false;
-    function aplicar() { cards.forEach(function (c, k) { c.classList.toggle('is-active', k === i); }); }
-    aplicar();
-    cards.forEach(function (c) {
-      c.addEventListener('mouseenter', function () { pausado = true; });
-      c.addEventListener('mouseleave', function () { pausado = false; });
+  /* 3. Las tarjetas apiladas de "cómo es trabajar" son solo CSS (sticky). */
+
+  /* 4. Servicios en modo teleprompter: se ilumina la situacion que pasa por el
+     centro de la pantalla y su respuesta aparece en el recuadro fijo. */
+  function teleprompter() {
+    var items = Array.prototype.slice.call(document.querySelectorAll('.tele-item'));
+    var texto = document.querySelector('.tele-texto');
+    var datos = document.getElementById('datos-servicios');
+    if (!items.length || !texto || !datos) return;
+    var textos = JSON.parse(datos.textContent);
+    var actual = 0, pendiente = false, mirando = false;
+
+    function activar(i) {
+      if (i === actual) return;
+      actual = i;
+      items.forEach(function (it, k) { it.classList.toggle('activa', k === i); });
+      texto.textContent = textos[i];
+      texto.classList.remove('cambio');
+      void texto.offsetWidth;
+      texto.classList.add('cambio');
+    }
+    function medir() {
+      pendiente = false;
+      var centro = medio(), mejor = 0, dist = Infinity;
+      items.forEach(function (it, k) {
+        var r = it.getBoundingClientRect();
+        var d = Math.abs(r.top + r.height / 2 - centro);
+        if (d < dist) { dist = d; mejor = k; }
+      });
+      activar(mejor);
+    }
+    function alScroll() { if (!pendiente) { pendiente = true; requestAnimationFrame(medir); } }
+    /* el centro del area visible, debajo del menu fijo */
+    function medio() { return (altoNav() + window.innerHeight) / 2; }
+
+    items.forEach(function (it, k) {
+      it.addEventListener('click', function () {
+        activar(k);
+        var r = it.getBoundingClientRect();
+        window.scrollBy({ top: r.top + r.height / 2 - medio(), left: 0, behavior: reduce ? 'auto' : 'smooth' });
+      });
+      it.addEventListener('focus', function () { activar(k); });
     });
-    setInterval(function () {
-      if (pausado) return;
-      i = (i + 1) % cards.length;
-      aplicar();
-    }, 3200);
+    /* solo se escucha el scroll mientras la lista esta en pantalla */
+    if (!('IntersectionObserver' in window)) { window.addEventListener('scroll', alScroll, { passive: true }); return; }
+    new IntersectionObserver(function (e) {
+      if (e[0].isIntersecting && !mirando) { window.addEventListener('scroll', alScroll, { passive: true }); mirando = true; alScroll(); }
+      else if (!e[0].isIntersecting && mirando) { window.removeEventListener('scroll', alScroll); mirando = false; }
+    }).observe(items[0].parentNode);
   }
 
-  /* 4. Servicios: chips + panel, con rotación automática y swipe */
-  function servicios() {
-    var chips = Array.prototype.slice.call(document.querySelectorAll('.chip[data-servicio]'));
-    var panel = document.getElementById('panel-servicio');
-    if (!chips.length || !panel) return;
-    var datos = JSON.parse(document.getElementById('datos-servicios').textContent);
-    var idx = 0, pausado = false;
-    var listaChips = chips[0].parentNode;
-    var acordeon = window.matchMedia('(max-width: 720px)');
-
-    /* En celular el panel viaja: se inserta justo debajo del chip elegido,
-       asi la respuesta aparece donde el dedo toco y no 400px mas abajo. */
-    function ubicarPanel() {
-      var destino, refChip;
-      if (acordeon.matches) {
-        refChip = chips[idx];
-        destino = refChip.nextSibling;
-        if (panel.previousElementSibling === refChip) return;
-      } else {
-        refChip = null;
-        destino = listaChips.nextSibling;
-        if (panel.previousElementSibling === listaChips) return;
-      }
-      var ancla = refChip || listaChips;
-      var antes = ancla.getBoundingClientRect().top;
-      (refChip ? listaChips : listaChips.parentNode).insertBefore(panel, destino);
-      var corrimiento = ancla.getBoundingClientRect().top - antes;
-      if (corrimiento) {
-        try { window.scrollBy({ top: corrimiento, left: 0, behavior: 'instant' }); }
-        catch (e) { window.scrollBy(0, corrimiento); }
-      }
-    }
-
-    /* Si el panel recien abierto se corta abajo, acercamos lo justo para que
-       entre entero, cuidando que el chip elegido siga a la vista. */
-    function acercarPanel() {
-      if (!acordeon.matches) return;
-      var sobra = panel.getBoundingClientRect().bottom - window.innerHeight + 16;
-      if (sobra <= 8) return;
-      var margen = chips[idx].getBoundingClientRect().top - 84;
-      var mover = Math.min(sobra, margen);
-      if (mover > 8) {
-        try { window.scrollBy({ top: mover, left: 0, behavior: 'smooth' }); }
-        catch (e) { window.scrollBy(0, mover); }
-      }
-    }
-
-    function pintar() {
-      var d = datos[idx];
-      panel.querySelector('.tag').textContent = '▸ ' + d.tag;
-      panel.querySelector('h3').textContent = d.titulo;
-      panel.querySelector('.panel-desc').textContent = d.texto;
-      panel.querySelector('.panel-cta .txt').textContent = d.cta;
-      document.querySelector('.panel-num').textContent = '0' + (idx + 1);
-      chips.forEach(function (c, i) { c.setAttribute('aria-pressed', i === idx ? 'true' : 'false'); });
-      ubicarPanel();
-      var main = panel.querySelector('.panel-main');
-      main.style.animation = 'none';
-      void main.offsetWidth;
-      main.style.animation = '';
-    }
-    chips.forEach(function (c, i) {
-      c.addEventListener('click', function () { idx = i; pausado = true; pintar(); acercarPanel(); });
-    });
-    var stage = panel;
-    var x0 = null, y0 = null;
-    stage.addEventListener('touchstart', function (e) { x0 = e.touches[0].clientX; y0 = e.touches[0].clientY; }, { passive: true });
-    stage.addEventListener('touchend', function (e) {
-      if (x0 === null) return;
-      var dx = e.changedTouches[0].clientX - x0, dy = e.changedTouches[0].clientY - y0;
-      if (Math.abs(dx) > 45 && Math.abs(dx) > Math.abs(dy)) {
-        idx = (idx + (dx < 0 ? 1 : -1) + datos.length) % datos.length;
-        pausado = true;
-        pintar();
-        acercarPanel();
-      }
-      x0 = null;
-    }, { passive: true });
-    pintar();
-    if (acordeon.addEventListener) {
-      acordeon.addEventListener('change', ubicarPanel);
-    } else if (acordeon.addListener) {
-      acordeon.addListener(ubicarPanel);
-    }
-    if (!reduce) {
-      setInterval(function () {
-        /* La rotacion automatica queda solo en escritorio: en el acordeon
-           moveria el panel de lugar mientras la persona esta leyendo. */
-        if (pausado || acordeon.matches) return;
-        idx = (idx + 1) % datos.length;
-        pintar();
-      }, 4500);
-    }
+  /* 5. Videos de YouTube: el reproductor se crea recien al tocar el play, asi
+     la home no carga los scripts de YouTube de entrada. */
+  function reproductor(id, titulo) {
+    var marco = document.createElement('iframe');
+    marco.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) +
+      '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
+    marco.title = titulo || 'Video';
+    marco.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
+    marco.setAttribute('allowfullscreen', '');
+    marco.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+    return marco;
   }
 
-  /* 5. Videos de YouTube: la tapa se cambia por el reproductor recien al tocar
-     el play, asi la home no carga los scripts de YouTube de entrada. */
+  /* Portadas tomadas de YouTube: si el video no tiene la imagen en alta
+     resolucion, YouTube devuelve un gris de 120px; ahi se usa la estandar. */
+  function portadaYT(img) {
+    function revisar() {
+      if (img.naturalWidth && img.naturalWidth < 200 && img.src.indexOf('maxresdefault') > -1) {
+        img.src = img.src.replace('maxresdefault', 'hqdefault');
+      }
+    }
+    if (img.complete) revisar(); else img.addEventListener('load', revisar);
+  }
+
   function videos() {
+    document.querySelectorAll('img[data-portada-yt]').forEach(portadaYT);
     document.querySelectorAll('.play[data-youtube]').forEach(function (boton) {
       boton.addEventListener('click', function () {
         var id = (boton.getAttribute('data-youtube') || '').trim();
         if (!id) return;
         var caja = boton.parentElement;
         if (caja.querySelector('.video-marco')) return;
-        var marco = document.createElement('iframe');
+        var marco = reproductor(id, boton.getAttribute('data-titulo'));
         marco.className = 'video-marco';
-        marco.src = 'https://www.youtube-nocookie.com/embed/' + encodeURIComponent(id) +
-          '?autoplay=1&rel=0&modestbranding=1&playsinline=1';
-        marco.title = boton.getAttribute('data-titulo') || 'Video';
-        marco.allow = 'accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share';
-        marco.setAttribute('allowfullscreen', '');
-        marco.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
         caja.appendChild(marco);
         caja.classList.add('reproduciendo');
         marco.focus();
       });
     });
+  }
+
+  /* Escenario del inicio. Los videos arrancan solos, sin sonido y con
+     subtitulos, y rotan cada 15 s. Tocar activa el audio sobre el mismo
+     reproductor, sin recargarlo. Si se baja con un video andando, sigue en una
+     ventana flotante que se puede cerrar: en computadora siempre, en celular
+     solo si se activo el sonido. */
+  function escenario() {
+    var raiz = document.querySelector('.escenario');
+    if (!raiz) return;
+    raiz.querySelectorAll('.escena').forEach(function (e) {
+      if (!(e.getAttribute('data-youtube') || '').trim()) e.parentNode.removeChild(e);
+    });
+    var escenas = Array.prototype.slice.call(raiz.querySelectorAll('.escena'));
+    if (!escenas.length) return;
+    var pantalla = raiz.querySelector('.escenario-pantalla');
+    var lugar = raiz.querySelector('.escenario-video');
+    var pausa = raiz.querySelector('.marco-pausa');
+    var titulo = raiz.querySelector('.escenario-titulo');
+    var sub = raiz.querySelector('.escenario-sub');
+    var YT = 'https://www.youtube-nocookie.com';
+    var TURNO = 15000;
+    var ahorro = navigator.connection && navigator.connection.saveData;
+    var escritorio = window.matchMedia('(min-width: 721px)');
+    var idx = 0, modo = 'portada', autoActivo = false, aVista = true, cerrado = false;
+    var yt = null, reloj = null, encender = null, escuchar = null, verificar = null;
+    raiz.style.setProperty('--turno', TURNO / 1000 + 's');
+
+    var minis = escenas.length < 2 ? [] : escenas.map(function (e, i) {
+      var b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'mini';
+      b.setAttribute('aria-label', 'Ver: ' + e.getAttribute('data-titulo'));
+      var img = document.createElement('img');
+      img.src = e.querySelector('img').getAttribute('src');
+      img.alt = '';
+      if (img.src.indexOf('i.ytimg.com') > -1) portadaYT(img);
+      var nombre = document.createElement('span');
+      nombre.textContent = e.getAttribute('data-mini') || e.getAttribute('data-nombre');
+      b.appendChild(img);
+      b.appendChild(nombre);
+      b.appendChild(document.createElement('i'));
+      b.addEventListener('click', function () { elegir(i); });
+      raiz.querySelector('.escenario-minis').appendChild(b);
+      return b;
+    });
+
+    function idActual() { return escenas[idx].getAttribute('data-youtube').trim(); }
+    function pintar() {
+      escenas.forEach(function (e, k) { e.classList.toggle('activa', k === idx); });
+      minis.forEach(function (b, k) { b.classList.toggle('activa', k === idx); b.setAttribute('aria-pressed', String(k === idx)); });
+      titulo.textContent = escenas[idx].getAttribute('data-nombre');
+      sub.textContent = escenas[idx].getAttribute('data-sub');
+    }
+    function mandar(func, args) {
+      if (yt && yt.frame.contentWindow) {
+        yt.frame.contentWindow.postMessage(JSON.stringify({ event: 'command', func: func, args: args || [] }), YT);
+      }
+    }
+    function vaciar() {
+      clearTimeout(reloj); clearTimeout(encender); clearTimeout(verificar); clearInterval(escuchar);
+      yt = null;
+      lugar.innerHTML = '';
+      raiz.classList.remove('en-vivo', 'rotando', 'con-sonido', 'propio', 'nativo');
+      pausa.classList.remove('pausado');
+    }
+    function crear(conAudio) {
+      var id = encodeURIComponent(idActual());
+      var f = document.createElement('iframe');
+      f.src = YT + '/embed/' + id + '?' +
+        (conAudio ? 'autoplay=1&controls=1' : 'autoplay=1&mute=1&controls=0&disablekb=1&loop=1&playlist=' + id) +
+        '&playsinline=1&rel=0&cc_load_policy=1&cc_lang_pref=es&hl=es&iv_load_policy=3' +
+        '&enablejsapi=1&origin=' + encodeURIComponent(location.origin);
+      f.title = (conAudio ? '' : 'Vista previa sin sonido: ') + escenas[idx].getAttribute('data-titulo');
+      f.allow = 'autoplay; encrypted-media; picture-in-picture; fullscreen';
+      f.setAttribute('referrerpolicy', 'strict-origin-when-cross-origin');
+      if (conAudio) f.setAttribute('allowfullscreen', '');
+      else { f.setAttribute('tabindex', '-1'); f.setAttribute('aria-hidden', 'true'); }
+      var este = { frame: f, listo: false, estado: -1, muted: !conAudio };
+      yt = este;
+      f.addEventListener('load', function () {
+        /* se le pide al reproductor que avise su estado (protocolo de la API de YouTube) */
+        var n = 0;
+        escuchar = setInterval(function () {
+          if (yt !== este || este.listo || ++n > 20) { clearInterval(escuchar); return; }
+          f.contentWindow.postMessage(JSON.stringify({ event: 'listening', id: 1, channel: 'widget' }), YT);
+        }, 250);
+        /* respaldo: si YouTube no avisa que arranco, se muestra igual */
+        encender = setTimeout(function () { raiz.classList.add('en-vivo'); }, 4000);
+      });
+      lugar.appendChild(f);
+    }
+
+    window.addEventListener('message', function (e) {
+      if (!yt || e.source !== yt.frame.contentWindow) return;
+      var d;
+      try { d = typeof e.data === 'string' ? JSON.parse(e.data) : e.data; } catch (x) { return; }
+      if (!d || !d.event) return;
+      var estado = null;
+      if (d.event === 'onReady' || d.event === 'initialDelivery') yt.listo = true;
+      if (d.event === 'onStateChange' && typeof d.info === 'number') estado = d.info;
+      if (d.event === 'infoDelivery' && d.info) {
+        yt.listo = true;
+        if (typeof d.info.playerState === 'number') estado = d.info.playerState;
+        if (typeof d.info.muted === 'boolean') yt.muted = d.info.muted;
+      }
+      if (estado === null) return;
+      yt.estado = estado;
+      pausa.classList.toggle('pausado', estado === 2);
+      /* la portada se va cuando el video corre de verdad; el margen tapa la barra de titulo del arranque */
+      if (estado === 1 && !raiz.classList.contains('en-vivo')) {
+        clearTimeout(encender);
+        encender = setTimeout(function () { raiz.classList.add('en-vivo'); }, 600);
+      }
+    });
+
+    function previa() {
+      vaciar();
+      modo = 'previa';
+      crear(false);
+      void raiz.offsetWidth;
+      raiz.classList.add('rotando');
+      if (escenas.length > 1) {
+        reloj = setTimeout(function () { idx = (idx + 1) % escenas.length; pintar(); previa(); }, TURNO);
+      }
+    }
+    /* respaldo: reproductor nuevo con sonido y los controles de YouTube */
+    function nativo() {
+      vaciar();
+      modo = 'sonido';
+      raiz.classList.add('con-sonido', 'nativo', 'en-vivo');
+      crear(true);
+    }
+    function conSonido() {
+      cerrado = false;
+      if (!yt || !yt.listo || yt.frame.src.indexOf('mute=1') < 0) { nativo(); return; }
+      clearTimeout(reloj);
+      raiz.classList.remove('rotando');
+      modo = 'sonido';
+      raiz.classList.add('con-sonido', 'propio', 'en-vivo');
+      mandar('unMute');
+      mandar('setVolume', [100]);
+      mandar('seekTo', [0, true]);
+      mandar('playVideo');
+      /* si el navegador no dejo activar el audio, se pasa al reproductor completo */
+      verificar = setTimeout(function () { if (modo === 'sonido' && yt && yt.muted) nativo(); }, 1200);
+    }
+    function alternarPausa() {
+      if (!yt) return;
+      var pausado = yt.estado === 2;
+      mandar(pausado ? 'playVideo' : 'pauseVideo');
+      yt.estado = pausado ? 1 : 2;
+      pausa.classList.toggle('pausado', !pausado);
+      pausa.setAttribute('aria-label', pausado ? 'Pausar' : 'Reproducir');
+    }
+    function cerrar() {
+      cerrado = true;
+      raiz.classList.remove('flotando');
+      vaciar();
+      modo = 'portada';
+    }
+    function elegir(i) {
+      idx = i;
+      pintar();
+      if (modo === 'sonido') nativo();
+      else if (autoActivo) previa();
+      else vaciar();
+    }
+    function alVer(visible) {
+      aVista = visible;
+      if (visible) {
+        raiz.classList.remove('flotando');
+        if (autoActivo && modo !== 'sonido' && !yt && !document.hidden) previa();
+        return;
+      }
+      if (!yt) return;
+      if (!cerrado && (modo === 'sonido' || escritorio.matches)) raiz.classList.add('flotando');
+      else if (modo !== 'sonido') { vaciar(); modo = 'portada'; }
+    }
+
+    pantalla.addEventListener('click', function () { if (modo !== 'sonido') conSonido(); });
+    raiz.querySelector('.marco-tapa').addEventListener('click', function (e) {
+      e.stopPropagation();
+      if (modo === 'sonido') alternarPausa(); else conSonido();
+    });
+    raiz.querySelector('.marco-escuchar').addEventListener('click', function (e) { e.stopPropagation(); conSonido(); });
+    pausa.addEventListener('click', function (e) { e.stopPropagation(); alternarPausa(); });
+    raiz.querySelector('.marco-cerrar').addEventListener('click', function (e) { e.stopPropagation(); cerrar(); });
+    pintar();
+
+    if (!('IntersectionObserver' in window)) return;
+    new IntersectionObserver(function (e) {
+      alVer(e[0].isIntersecting && e[0].intersectionRatio >= 0.2);
+    }, { threshold: [0, 0.2] }).observe(pantalla);
+    document.addEventListener('visibilitychange', function () {
+      if (modo === 'sonido') return;
+      if (document.hidden) { if (yt) { vaciar(); raiz.classList.remove('flotando'); modo = 'portada'; } }
+      else if (aVista && autoActivo && !yt) previa();
+    });
+
+    if (reduce || ahorro) return;
+    function arrancar() {
+      autoActivo = true;
+      if (aVista && !yt && modo !== 'sonido' && !document.hidden) previa();
+    }
+    if (document.readyState === 'complete') arrancar();
+    else window.addEventListener('load', arrancar);
+  }
+
+  /* Testimonios en seccion horizontal: mientras la seccion queda fija, el
+     scroll vertical mueve las tarjetas de costado. Si algo no entra en la
+     pantalla, o hay movimiento reducido, queda una fila con scroll nativo. */
+  function horizontal() {
+    var alto = document.querySelector('.horiz');
+    if (!alto) return;
+    var seccion = alto.parentNode;
+    var pegado = alto.querySelector('.horiz-pegado');
+    var ventana = alto.querySelector('.horiz-ventana');
+    var tren = alto.querySelector('.horiz-tren');
+    var barra = alto.querySelector('.horiz-barra i');
+    var recorrido = 0, activo = false, pendiente = false, medidas = '';
+
+    function pintar() {
+      pendiente = false;
+      if (activo) {
+        var avance = Math.min(recorrido, Math.max(0, altoNav() - alto.getBoundingClientRect().top));
+        tren.style.transform = 'translate3d(' + (-avance) + 'px,0,0)';
+        barra.style.width = (recorrido ? avance / recorrido * 100 : 100) + '%';
+      } else {
+        var max = ventana.scrollWidth - ventana.clientWidth;
+        barra.style.width = (max > 0 ? ventana.scrollLeft / max * 100 : 100) + '%';
+      }
+    }
+    function pedir() { if (!pendiente) { pendiente = true; requestAnimationFrame(pintar); } }
+    function preparar(forzar) {
+      /* en celular la barra del navegador cambia el alto al scrollear:
+         solo se rearma si cambia el ancho o el alto cambia de verdad */
+      var clave = window.innerWidth + 'x' + Math.round(window.innerHeight / 150);
+      if (!forzar && clave === medidas) return;
+      medidas = clave;
+      seccion.classList.remove('horiz-activo');
+      alto.style.height = '';
+      tren.style.transform = '';
+      var disponible = window.innerHeight - altoNav();
+      activo = !reduce && disponible >= 480 && pegado.scrollHeight <= disponible - 16;
+      if (activo) {
+        seccion.classList.add('horiz-activo');
+        recorrido = Math.max(0, tren.scrollWidth - pegado.clientWidth);
+        alto.style.height = (pegado.clientHeight + recorrido) + 'px';
+      }
+      pintar();
+    }
+    window.addEventListener('scroll', pedir, { passive: true });
+    ventana.addEventListener('scroll', pedir, { passive: true });
+
+    /* sin anclaje (pantallas donde no entra), la fila avanza sola cada 6 s
+       mientras se ve; se frena con el mouse encima o 8 s despues de tocarla */
+    var tocado = 0, encima = false, aLaVista = false;
+    ventana.addEventListener('pointerdown', function () { tocado = Date.now(); }, { passive: true });
+    ventana.addEventListener('touchstart', function () { tocado = Date.now(); }, { passive: true });
+    ventana.addEventListener('pointerenter', function (e) { if (e.pointerType === 'mouse') encima = true; });
+    ventana.addEventListener('pointerleave', function (e) { if (e.pointerType === 'mouse') encima = false; });
+    if (!reduce && 'IntersectionObserver' in window) {
+      new IntersectionObserver(function (e) { aLaVista = e[0].isIntersecting; }, { threshold: 0.5 }).observe(ventana);
+      setInterval(function () {
+        if (activo || !aLaVista || encima || document.hidden || Date.now() - tocado < 8000) return;
+        var q = tren.children;
+        if (q.length < 2) return;
+        var sig = ventana.scrollLeft + (q[1].offsetLeft - q[0].offsetLeft);
+        ventana.scrollTo({ left: sig > ventana.scrollWidth - ventana.clientWidth + 4 ? 0 : sig, behavior: 'smooth' });
+      }, 6000);
+    }
+    window.addEventListener('resize', function () { clearTimeout(preparar.t); preparar.t = setTimeout(function () { preparar(false); }, 150); });
+    window.addEventListener('load', function () { preparar(true); });
+    if (document.fonts && document.fonts.ready) document.fonts.ready.then(function () { preparar(true); });
+    preparar(true);
   }
 
   /* 6. Preguntas frecuentes */
@@ -259,9 +481,10 @@
   document.addEventListener('DOMContentLoaded', function () {
     reveals();
     contadores();
-    ciclo();
-    servicios();
+    teleprompter();
     videos();
+    escenario();
+    horizontal();
     preguntas();
     menu();
   });
