@@ -194,6 +194,8 @@ ul { margin: 0; padding: 0; list-style: none; }
 .tele-item::before { content: "▸"; position: absolute; left: 4px; top: 9px; color: var(--bordo); opacity: 0; transform: translateX(-10px); transition: opacity .35s var(--ease), transform .35s var(--ease); }
 .tele-item:hover { opacity: .5; }
 .tele-item.activa { opacity: 1; }
+.tele-clave { padding: 0 .16em; margin: 0 -.16em; -webkit-box-decoration-break: clone; box-decoration-break: clone; transition: background-color .35s var(--ease); }
+.tele-item.activa .tele-clave { background: var(--amarillo); }
 .tele-item.activa::before { opacity: 1; transform: none; }
 .tele-item:focus-visible { outline: 2px solid var(--bordo); outline-offset: 4px; border-radius: 8px; }
 .tele-resp { position: sticky; top: calc(50vh - 80px); padding: 28px 32px; border-radius: 22px; background: var(--blanco); border: 1px solid var(--borde); border-left: 5px solid var(--bordo); box-shadow: 0 18px 40px rgba(28,27,25,.08); }
