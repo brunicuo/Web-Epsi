@@ -198,6 +198,7 @@ ul { margin: 0; padding: 0; list-style: none; }
 .tele-item:focus-visible { outline: 2px solid var(--bordo); outline-offset: 4px; border-radius: 8px; }
 .tele-resp { position: sticky; top: calc(50vh - 80px); padding: 28px 32px; border-radius: 22px; background: var(--blanco); border: 1px solid var(--borde); border-left: 5px solid var(--bordo); box-shadow: 0 18px 40px rgba(28,27,25,.08); }
 .tele-texto { font-size: clamp(18px, 1.6vw, 22px); font-weight: 600; line-height: 1.5; color: var(--tinta); }
+.tele-texto strong { font-weight: 800; color: var(--bordo); }
 .tele-texto.cambio { animation: faqIn .35s var(--ease) both; }
 
 /* pasos */

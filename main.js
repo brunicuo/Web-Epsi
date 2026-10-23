@@ -83,11 +83,26 @@
     var textos = JSON.parse(datos.textContent);
     var actual = 0, pendiente = false, mirando = false;
 
+    // Lo que va entre *asteriscos* en los textos sale como palabra clave en negrita.
+    function escribir(t) {
+      texto.textContent = '';
+      t.split('*').forEach(function (parte, k) {
+        if (!parte) return;
+        if (k % 2) {
+          var fuerte = document.createElement('strong');
+          fuerte.textContent = parte;
+          texto.appendChild(fuerte);
+        } else {
+          texto.appendChild(document.createTextNode(parte));
+        }
+      });
+    }
+
     function activar(i) {
       if (i === actual) return;
       actual = i;
       items.forEach(function (it, k) { it.classList.toggle('activa', k === i); });
-      texto.textContent = textos[i];
+      escribir(textos[i]);
       texto.classList.remove('cambio');
       void texto.offsetWidth;
       texto.classList.add('cambio');
